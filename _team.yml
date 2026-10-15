@@ -17,11 +17,8 @@
 
 author:
   - name:
-      given: "[Vorname 1]"
-      family: "[Nachname 1]"
+      given: "Marlene"
+      family: "Enna"
   - name:
-      given: "[Vorname 2]"
-      family: "[Nachname 2]"
-  - name:
-      given: "[Vorname 3]"
-      family: "[Nachname 3]"
+      given: "Franz-Aurel"
+      family: "Huber"
