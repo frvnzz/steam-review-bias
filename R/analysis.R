@@ -294,7 +294,7 @@ offtopic_stats <- function(daily, which_game) {
 }
 
 fmt_date <- function(d) format(as.Date(d), "%d.%m.%Y")
-fmt_hours <- function(h) paste(fmt_num(h), "Stunden")
+fmt_hours <- function(h) paste0(fmt_num(h), "\u00a0Stunden")
 
 # Grau hinterlegter Zeitraum (z. B. die Review-Bombing-Spitze), unter die Daten gelegt
 add_shade <- function(p, shade) {

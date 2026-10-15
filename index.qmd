@@ -67,6 +67,8 @@ lang_range <- map(set_names(games3), function(g) {
   list(hi = slice_max(d, share, n = 1), lo = slice_min(d, share, n = 1))
 })
 refunded <- filter(fac, group == "Später zurückgegeben")
+refunded_shown <- filter(refunded, n >= 20)     # wie in plot_factors()
+refunded_hidden <- filter(refunded, n < 20)
 
 # Alt-Texte (hier erzeugt, damit Apostrophe im Spielnamen das YAML nicht stören)
 alt <- list(
@@ -109,7 +111,7 @@ alt <- list(
 
 Klingt eindeutig. Aber diese Zahl beantwortet nur eine Frage: *Wie urteilen die Menschen, die eine Review geschrieben haben?* @cr-hook-n
 
-Wie viele Menschen das Spiel insgesamt gespielt haben, steht nicht daneben – und erst recht nicht, was all jene denken, die **nichts** geschrieben haben. @cr-hook-q
+Wie viele Menschen das Spiel insgesamt gespielt haben, steht nicht daneben – Steam veröffentlicht diese Zahl nicht. Und erst recht nicht, was all jene denken, die **nichts** geschrieben haben. Die Reviews sind nur die Spitze des Eisbergs. @cr-hook-q
 
 Diese Seite zeigt, warum das wichtig ist: erst mit einem Gedankenexperiment, dann mit `r fmt_num(nrow(r))` echten Reviews zu drei Spielen. @cr-hook-q
 
@@ -122,7 +124,19 @@ Diese Seite zeigt, warum das wichtig ist: erst mit einem Gedankenexperiment, dan
 :::
 
 ::: {#cr-hook-q}
-[[?]{.value}[Menschen haben gespielt und geschwiegen]{.label}]{.big-number}
+::: {.iceberg role="img" aria-label="Eisberg: Über der Wasserlinie die bekannten Reviews, darunter ein viel größerer, gestrichelter Bereich mit einem Fragezeichen für alle, die gespielt, aber keine Review geschrieben haben. Wie groß er ist, veröffentlicht Steam nicht."}
+::: {.berg-tip}
+[sichtbar]{.berg-kicker}
+[`r fmt_num(bg3$total_reviews)`]{.value}
+[haben eine Review geschrieben]{.label}
+:::
+::: {.berg-hidden}
+[unsichtbar]{.berg-kicker}
+[?]{.value}
+[haben gespielt und geschwiegen]{.label}
+[Steam veröffentlicht keine Spielerzahlen – wie groß dieser Teil ist, weiß nur Valve.]{.note}
+:::
+:::
 :::
 
 ::::
@@ -144,13 +158,13 @@ sim <- sim_summary()
 
 Stell dir ein Spiel mit genau `r sim$n` Spieler:innen vor. Weil wir uns diese Welt **ausgedacht** haben, kennen wir die Wahrheit: `r sim$n_happy` von ihnen – also `r fmt_pct(sim$share_true)` – sind [zufrieden]{.pos}, der Rest ist [unzufrieden]{.neg}. @cr-sim-all
 
-Im echten Leben fragt aber niemand alle. Eine Review schreibt nur, wer Lust dazu hat. Nehmen wir an, Unzufriedene haben `r fmt_num(sim$ratio)`-mal so oft das Bedürfnis, sich Luft zu machen: `r fmt_pct(sim$prm$rate_high)` von ihnen schreiben eine Review, aber nur `r fmt_pct(sim$prm$rate_low)` der Zufriedenen. @cr-sim-reviewers
+Im echten Leben fragt aber niemand alle. Eine Review schreibt nur, wer Lust dazu hat. Nehmen wir an, Unzufriedene haben `r fmt_num(sim$ratio)`‑mal so oft das Bedürfnis, sich Luft zu machen: `r fmt_pct(sim$prm$rate_high)` von ihnen schreiben eine Review, aber nur `r fmt_pct(sim$prm$rate_low)` der Zufriedenen. @cr-sim-reviewers
 
 Übrig bleiben `r sim$n_reviewers` Reviews – und davon sind nur **`r fmt_pct(sim$share_A)` positiv**. Niemand hat gelogen, niemand hat falsch gerechnet. Die Zahl ist trotzdem weit weg von den wahren `r fmt_pct(sim$share_true)`. @cr-sim-reviewers
 
 Das ist **Selektionsbias**: Wer in einer Stichprobe landet, hängt mit dem zusammen, was gemessen wird. Hier: Ob jemand eine Review schreibt, hängt davon ab, wie zufrieden die Person ist. @cr-sim-reviewers
 
-Die Verzerrung kann genauso gut in die andere Richtung gehen. Schreiben die *Zufriedenen* `r fmt_num(sim$ratio)`-mal so oft, zeigt dieselbe Spielerschaft plötzlich **`r fmt_pct(sim$share_B)` positiv**. @cr-sim-compare
+Die Verzerrung kann genauso gut in die andere Richtung gehen. Schreiben die *Zufriedenen* `r fmt_num(sim$ratio)`‑mal so oft, zeigt dieselbe Spielerschaft plötzlich **`r fmt_pct(sim$share_B)` positiv**. @cr-sim-compare
 
 Das Problem: Bei echten Spielen sehen wir nur die Reviews – nie die stille Mehrheit. Wir wissen also nicht einmal, in welche Richtung die Zahl verzerrt ist. Wir können aber schauen, *wer* die Reviewer sind und *wann* sie schreiben. Genau das machen wir jetzt mit echten Steam-Daten. @cr-sim-compare
 
@@ -382,7 +396,7 @@ An nur `r spike$n_days` Tagen entstanden `r fmt_num(spike$n_reviews)` Reviews �
 
 In diesen Tagen waren `r fmt_pct(spike$share_pos)` der Reviews positiv, in den drei Wochen davor `r fmt_pct(spike$share_pos_base)`. **Vorsicht beim Lesen:** Die Schnittstelle liefert jede Review so, wie sie *heute* aussieht. Manche Reviews aus jenen Tagen wurden nachweislich erst später geändert, gelöschte fehlen ganz. Wie die Stimmung *damals* aussah, lässt sich so nicht exakt rekonstruieren. @cr-hd-share
 
-Wichtig für den Score: Ob wir Steams Off-Topic-Filter einschalten oder nicht, macht bei *Helldivers 2* einen Unterschied von genau `r fmt_num(hd_filter_diff)` Reviews. Diese Phase zählt also **voll** in die „`r hd$review_score_desc`“-Bewertung von `r fmt_pct(hd$share_pos)`. Ohne die `r spike$n_days` Spitzentage läge der Anteil bei `r fmt_pct(hd_without_spike)`. @cr-hd-share
+Wichtig für den Score: Ob wir Steams Off-Topic-Filter einschalten oder nicht, macht bei *Helldivers 2* `r if (hd_filter_diff == 0) "**keinen** Unterschied – keine einzige Review wird ausgeblendet" else paste("einen Unterschied von", fmt_num(abs(hd_filter_diff)), "Reviews")`. Diese Phase zählt also **voll** in die „`r hd$review_score_desc`“-Bewertung von `r fmt_pct(hd$share_pos)`. Ohne die `r spike$n_days` Spitzentage läge der Anteil bei `r fmt_pct(hd_without_spike)`. @cr-hd-share
 
 Ganz anders bei *Borderlands 2* im Frühjahr 2019: Valve hat diese Phase als „off-topic“ eingestuft. Vom `r fmt_date(off$from)` bis `r fmt_date(off$to)` liefert die Standardabfrage **null** Reviews. Erst mit `filter_offtopic_activity = false` tauchen `r fmt_num(off$n_hidden)` Reviews auf, `r fmt_pct(off$share_neg_hidden)` davon negativ. @cr-bl-offtopic
 
@@ -464,7 +478,7 @@ print_mobile(plot_offtopic(D$daily, "Borderlands 2"), date_breaks = "1 month")
 
 Steam speichert zu jeder Review noch mehr: Wurde das Spiel auf Steam gekauft? Als Geschenk markiert? Später zurückgegeben? Meist auf dem Steam Deck gespielt? Jeder Punkt zeigt den Anteil positiver Reviews in einer Gruppe, der Strich das 95-%-Unsicherheitsintervall. @cr-factors
 
-Am auffälligsten: Reviews zu Spielen, die später **zurückgegeben** wurden, sind nur zu `r fmt_pct(min(refunded$share))` bis `r fmt_pct(max(refunded$share))` positiv. Aber: Das sind nur `r fmt_num(min(refunded$n))` bis `r fmt_num(max(refunded$n))` Reviews pro Spiel – die Intervalle sind entsprechend breit. Kleine Gruppen, große Unsicherheit. @cr-factors
+Am auffälligsten: Reviews zu Spielen, die später **zurückgegeben** wurden, sind nur zu `r fmt_pct(min(refunded_shown$share))` bis `r fmt_pct(max(refunded_shown$share))` positiv. Aber: Das sind nur `r fmt_num(min(refunded_shown$n))` bis `r fmt_num(max(refunded_shown$n))` Reviews pro Spiel – die Intervalle sind entsprechend breit`r if (nrow(refunded_hidden)) paste0(". Bei *", paste(refunded_hidden$game, collapse = "* und *"), "* sind es nur ", fmt_num(sum(refunded_hidden$n)), " – zu wenige, um sie überhaupt zu zeigen") else ""`. Kleine Gruppen, große Unsicherheit. @cr-factors
 
 Bei den anderen Gruppen überlappen sich die Intervalle meist stark. Auch das ist ein Ergebnis: Ob jemand das Spiel auf Steam oder anderswo gekauft hat, macht in unseren Daten keinen großen Unterschied. @cr-factors
 

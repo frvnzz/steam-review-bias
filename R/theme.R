@@ -56,7 +56,8 @@ scale_colour_vote <- function(...) {
 fmt_num <- function(x, digits = 0) {
   formatC(round(x, digits), format = "f", digits = digits, big.mark = ".", decimal.mark = ",")
 }
-fmt_pct <- function(x, digits = 0) paste0(fmt_num(100 * x, digits), " %")
+# geschütztes Leerzeichen: Zahl und „%“ werden nie auf zwei Zeilen getrennt
+fmt_pct <- function(x, digits = 0) paste0(fmt_num(100 * x, digits), "\u00a0%")
 
 theme_set(theme_srb())
 update_geom_defaults("text", list(colour = srb_col[["text"]]))

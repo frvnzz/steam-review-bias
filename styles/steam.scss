@@ -136,6 +136,50 @@ body { background: $srb-bg; }
   }
 }
 
+// Eisberg (Kapitel 1): kleine sichtbare Spitze = Reviews, großer gestrichelter
+// Teil unter der Wasserlinie = alle, die gespielt und nichts geschrieben haben.
+// Die Größen sind bewusst nicht maßstäblich – das Verhältnis kennt niemand außer Valve.
+.iceberg {
+  width: min(30rem, 100%);
+  margin: 0 auto;
+  text-align: center;
+
+  .berg-kicker {
+    display: block;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: $srb-accent;
+    margin-bottom: .35rem;
+  }
+  .value { display: block; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: #fff; }
+  .label { display: block; margin-top: .4rem; color: $srb-muted; }
+
+  .berg-tip {
+    width: 58%;
+    margin: 0 auto;
+    padding: 1rem .75rem .9rem;
+    background: $srb-panel;
+    border: 1px solid $srb-line;
+    border-bottom: none;
+    border-radius: 14px 14px 0 0;
+    .value { font-size: clamp(1.8rem, 3.6vw, 2.6rem); }
+    .label { font-size: .95rem; }
+  }
+
+  .berg-hidden {
+    padding: 1.6rem 1.25rem 2.4rem;
+    border: 2px dashed $srb-line;
+    border-top: 4px solid $srb-pos;   // Wasserlinie
+    border-radius: 0 0 45% 45% / 0 0 22% 22%;
+    background: linear-gradient(180deg, rgba(47, 143, 204, .14), rgba(47, 143, 204, .03));
+    .value { font-size: clamp(4.5rem, 12vw, 8.5rem); }
+    .label { font-size: clamp(1.05rem, 2vw, 1.35rem); }
+    .note { display: block; margin: .9rem auto 0; max-width: 20rem; font-size: .85rem; color: $srb-muted; }
+  }
+}
+
 .placeholder-card {
   box-sizing: border-box;
   max-width: min(34rem, 100%);
@@ -257,6 +301,17 @@ $srb-mobile-graphic: 58dvh;
     padding: 1rem;
     .value { font-size: clamp(3.5rem, 20vw, 6rem); }
     .label { font-size: 1.05rem; }
+  }
+
+  .iceberg {
+    width: min(22rem, 100%);
+    .berg-tip { padding: .6rem .5rem .6rem; .label { font-size: .85rem; } }
+    .berg-hidden {
+      padding: 1rem 1rem 1.4rem;
+      .value { font-size: 4rem; }
+      .label { font-size: 1rem; }
+      .note { font-size: .8rem; margin-top: .5rem; }
+    }
   }
 
   #title-block-header { padding: 12svh 1rem 7svh; }
