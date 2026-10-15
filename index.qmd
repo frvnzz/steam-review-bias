@@ -581,7 +581,7 @@ print_mobile(plot_languages(r), facet = facet_wrap(~game, ncol = 1))
 ::: {.chapter}
 [Anhang]{.chapter-kicker}
 
-## Methodik, Daten & Team
+## Methodik & Daten
 :::
 
 ::: {.prose}
@@ -621,14 +621,9 @@ Code, bereinigte Daten und eine Anleitung zum Nachvollziehen der Analyse: <https
 
 Alle Spiel- und Markennamen gehören ihren jeweiligen Inhabern. Diese Seite ist ein studentisches Projekt und steht in keiner Verbindung zu Valve oder den genannten Studios.
 
-### Team
-
-{{< team >}}
 :::
 
 <!-- ===================================================================== -->
 ::: {.site-footer role="contentinfo"}
-[Ein Projekt von {{< team inline >}}]{.footer-team}
-
-[[]{.bi .bi-github aria-hidden="true"} Code und Daten auf GitHub []{.bi .bi-box-arrow-up-right .footer-ext aria-hidden="true"}[(öffnet in neuem Tab)]{.visually-hidden}](https://github.com/frvnzz/steam-review-bias){.footer-link target="_blank" rel="noopener"}
+Ein Projekt von {{< team >}} [[]{.bi .bi-github aria-hidden="true"}](https://github.com/frvnzz/steam-review-bias){.footer-github title="GitHub" aria-label="Code und Daten auf GitHub (öffnet in neuem Tab)" target="_blank" rel="noopener"}
 :::

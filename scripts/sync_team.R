@@ -3,7 +3,7 @@
 #   Rscript scripts/sync_team.R          # CITATION.cff aktualisieren
 #   Rscript scripts/sync_team.R --check  # nur prüfen (Exit-Code 1 bei Abweichung)
 #
-# Titelblock und Team-Abschnitt der Seite lesen _team.yml direkt – dafür ist
+# Titelblock und Footer der Seite lesen _team.yml direkt – dafür ist
 # kein Sync nötig. Beim Rendern prüft der Shortcode „team“ zusätzlich, ob
 # CITATION.cff noch passt.
 

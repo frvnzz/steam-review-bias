@@ -18,7 +18,7 @@ Scrollytelling-Webseite über **Selektionsbias in Steam-User-Reviews**: Die Zahl
 | `R/clean_reviews.R` | Bereinigung → `data/` (ohne IDs, ohne Freitext) |
 | `R/theme.R` | ggplot2-Theme + Zahlenformate |
 | `scripts/sync_team.R` | überträgt die Namen aus `_team.yml` nach `CITATION.cff` |
-| `shortcodes/team.lua` | Team-Liste auf der Seite + Konsistenz-Check gegen `CITATION.cff` |
+| `shortcodes/team.lua` | Namen im Footer + Konsistenz-Check gegen `CITATION.cff` |
 | `data/` | bereinigte, committbare Daten |
 | `_freeze/` | eingefrorene R-Ergebnisse – CI braucht dadurch kein R |
 | `_extensions/` | Closeread-Extension |
@@ -71,7 +71,7 @@ git add _team.yml CITATION.cff _freeze && git commit -m "Team aktualisiert" && g
 | Wo die Namen erscheinen | Wie sie dort hinkommen |
 |---|---|
 | Titelblock der Seite | Quarto lädt `_team.yml` über `metadata-files` in `_quarto.yml` |
-| Team-Abschnitt | Shortcode `{{< team >}}` (`shortcodes/team.lua`) |
+| Footer der Seite | Shortcode `{{< team >}}` (`shortcodes/team.lua`) |
 | `CITATION.cff` | `scripts/sync_team.R` |
 
 Passen `_team.yml` und `CITATION.cff` nicht zusammen, bricht `quarto render` mit einer Fehlermeldung ab, lokal **und** in der GitHub Action. So geht nie eine Seite mit falschen Namen online.

@@ -1,7 +1,7 @@
--- Shortcode {{< team >}}: listet die Gruppenmitglieder aus _team.yml auf
--- (Quarto lädt die Datei als Metadaten) und prüft dabei, ob CITATION.cff
--- dieselben Namen in derselben Reihenfolge enthält. Läuft ohne R, also auch in der CI.
--- {{< team inline >}} liefert die Namen als Fließtext („A, B und C“), z. B. für den Footer.
+-- Shortcode {{< team >}}: setzt die Gruppenmitglieder aus _team.yml als Fließtext
+-- ein („A, B und C“, für den Footer). Quarto lädt die Datei als Metadaten. Dabei wird
+-- geprüft, ob CITATION.cff dieselben Namen in derselben Reihenfolge enthält.
+-- Läuft ohne R, also auch in der CI.
 
 local stringify = pandoc.utils.stringify
 
@@ -53,22 +53,14 @@ return {
       os.exit(1)
     end
 
-    if args[1] and stringify(args[1]) == "inline" then
-      -- jeder Name in einem .nowrap-Span: nie über zwei Zeilen getrennt (auch nicht am Bindestrich)
-      local out = {}
-      for i, name in ipairs(team) do
-        if i > 1 then
-          table.insert(out, pandoc.Str(i == #team and " und " or ", "))
-        end
-        table.insert(out, pandoc.Span({ pandoc.Str(name) }, pandoc.Attr("", { "nowrap" })))
+    -- jeder Name in einem .nowrap-Span: nie über zwei Zeilen getrennt (auch nicht am Bindestrich)
+    local out = {}
+    for i, name in ipairs(team) do
+      if i > 1 then
+        table.insert(out, pandoc.Str(i == #team and " und " or ", "))
       end
-      return pandoc.Inlines(out)
+      table.insert(out, pandoc.Span({ pandoc.Str(name) }, pandoc.Attr("", { "nowrap" })))
     end
-
-    local items = {}
-    for _, name in ipairs(team) do
-      table.insert(items, { pandoc.Plain({ pandoc.Str(name) }) })
-    end
-    return pandoc.Div({ pandoc.BulletList(items) }, pandoc.Attr("", { "team-list" }))
+    return pandoc.Inlines(out)
   end
 }
