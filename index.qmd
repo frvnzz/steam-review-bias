@@ -39,16 +39,54 @@ Wie viele Spieler:innen das insgesamt sind – und ob sie typisch sind –, steh
 ## Selektionsbias in 60 Sekunden
 :::
 
+```{r}
+#| label: sim-setup
+source("R/simulation.R")
+sim <- sim_summary()
+```
+
 :::: {.cr-section}
 
-Platzhalter: Punktewolke aller Spieler:innen. @cr-selection
+Stell dir ein Spiel mit genau `r sim$n` Spieler:innen vor. Weil wir uns diese Welt **ausgedacht** haben, kennen wir die Wahrheit: `r sim$n_happy` von ihnen – also `r fmt_pct(sim$share_true)` – sind [zufrieden]{.pos}, der Rest ist [unzufrieden]{.neg}. @cr-sim-all
 
-Platzhalter: Nur ein kleiner, besonderer Teil schreibt eine Review. @cr-selection
+Im echten Leben fragt aber niemand alle. Eine Review schreibt nur, wer Lust dazu hat. Nehmen wir an, Unzufriedene haben `r fmt_num(sim$ratio)`-mal so oft das Bedürfnis, sich Luft zu machen: `r fmt_pct(sim$prm$rate_high)` von ihnen schreiben eine Review, aber nur `r fmt_pct(sim$prm$rate_low)` der Zufriedenen. @cr-sim-reviewers
 
-::: {#cr-selection}
-::: {.placeholder-card}
-Grafik folgt: Simulation mit bekannter „Wahrheit“
+Übrig bleiben `r sim$n_reviewers` Reviews – und davon sind nur **`r fmt_pct(sim$share_A)` positiv**. Niemand hat gelogen, niemand hat falsch gerechnet. Die Zahl ist trotzdem weit weg von den wahren `r fmt_pct(sim$share_true)`. @cr-sim-reviewers
+
+Das ist **Selektionsbias**: Wer in einer Stichprobe landet, hängt mit dem zusammen, was gemessen wird. Hier: Ob jemand eine Review schreibt, hängt davon ab, wie zufrieden er oder sie ist. @cr-sim-reviewers
+
+Die Verzerrung kann genauso gut in die andere Richtung gehen. Schreiben die *Zufriedenen* `r fmt_num(sim$ratio)`-mal so oft, zeigt dieselbe Spielerschaft plötzlich **`r fmt_pct(sim$share_B)` positiv**. @cr-sim-compare
+
+Das Problem: Bei echten Spielen sehen wir nur die Reviews – nie die stille Mehrheit. Wir wissen also nicht einmal, in welche Richtung die Zahl verzerrt ist. Wir können aber schauen, *wer* die Reviewer sind und *wann* sie schreiben. Genau das machen wir jetzt mit echten Steam-Daten. @cr-sim-compare
+
+::: {#cr-sim-all}
+```{r}
+#| label: fig-sim-all
+#| fig-width: 6
+#| fig-height: 6.4
+#| fig-alt: !expr 'sprintf("Punktewolke mit %d Punkten in einem 20-mal-20-Raster. %d blaue Punkte stehen für zufriedene, %d orange Punkte für unzufriedene Spieler:innen.", sim$n, sim$n_happy, sim$n - sim$n_happy)'
+plot_population(sim)
+```
 :::
+
+::: {#cr-sim-reviewers}
+```{r}
+#| label: fig-sim-reviewers
+#| fig-width: 6
+#| fig-height: 6.4
+#| fig-alt: !expr 'sprintf("Dieselbe Punktewolke, aber nur %d Punkte sind hervorgehoben: die Reviewer. Davon sind %d blau (zufrieden) und %d orange (unzufrieden), obwohl in der ganzen Wolke Blau deutlich überwiegt.", sim$n_reviewers, sim$n_rev_happy, sim$n_reviewers - sim$n_rev_happy)'
+plot_population(sim, highlight_reviewers = TRUE)
+```
+:::
+
+::: {#cr-sim-compare}
+```{r}
+#| label: fig-sim-compare
+#| fig-width: 7
+#| fig-height: 4.2
+#| fig-alt: !expr 'sprintf("Balkendiagramm: Wahrer Anteil Zufriedener %s. Anteil positiver Reviews, wenn Unzufriedene öfter schreiben: %s. Wenn Zufriedene öfter schreiben: %s.", fmt_pct(sim$share_true), fmt_pct(sim$share_A), fmt_pct(sim$share_B))'
+plot_comparison(sim)
+```
 :::
 
 ::::
