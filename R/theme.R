@@ -1,6 +1,7 @@
 # Einheitlicher ggplot2-Stil für alle Grafiken der Seite.
 # Farben passen zu styles/steam.scss; Positiv/Negativ nutzen die
-# farbenblind-taugliche Okabe-Ito-Palette (Himmelblau vs. Orange).
+# Okabe-Ito-Farbtöne (Blau vs. Orange), für den dunklen Hintergrund abgedunkelt
+# und mit dem dataviz-Validator geprüft (Helligkeit, CVD-Abstand, Kontrast).
 
 library(ggplot2)
 
@@ -11,13 +12,10 @@ srb_col <- c(
   text   = "#dce6ef",
   muted  = "#93a7bb",
   accent = "#66c0f4",
-  pos    = "#56b4e9",
-  neg    = "#e69f00",
+  pos    = "#2f8fcc",
+  neg    = "#c77f00",
   grey   = "#5b6f86"
 )
-
-# Okabe-Ito für mehrere Kategorien (ohne Schwarz – dunkler Hintergrund)
-srb_qual <- c("#56b4e9", "#e69f00", "#009e73", "#f0e442", "#cc79a7", "#d55e00", "#0072b2")
 
 theme_srb <- function(base_size = 13) {
   theme_minimal(base_size = base_size) %+replace%
@@ -62,3 +60,8 @@ fmt_pct <- function(x, digits = 0) paste0(fmt_num(100 * x, digits), " %")
 
 theme_set(theme_srb())
 update_geom_defaults("text", list(colour = srb_col[["text"]]))
+
+# Grafik-Device mit Seitenhintergrund statt Weiß (sonst weiße Ränder im PNG)
+if (requireNamespace("knitr", quietly = TRUE)) {
+  knitr::opts_chunk$set(dev.args = list(bg = srb_col[["bg"]]))
+}

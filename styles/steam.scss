@@ -8,8 +8,8 @@ $srb-line:      #2f4560;
 $srb-text:      #dce6ef;
 $srb-muted:     #93a7bb;
 $srb-accent:    #66c0f4;
-$srb-pos:       #56b4e9;   // Okabe-Ito „sky blue“  → positiv
-$srb-neg:       #e69f00;   // Okabe-Ito „orange“    → negativ
+$srb-pos:       #2f8fcc;   // positiv (Okabe-Ito-Blau, abgedunkelt; validiert)
+$srb-neg:       #c77f00;   // negativ (Okabe-Ito-Orange, abgedunkelt; validiert)
 
 $body-bg:    $srb-bg;
 $body-color: $srb-text;
@@ -117,7 +117,16 @@ body { background: $srb-bg; }
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.04em;
-    color: $srb-pos;
+    color: #fff;
+  }
+  .value::after {   // Farbbalken trägt die Bedeutung, nicht die Schrift
+    content: "";
+    display: block;
+    width: 4.5rem;
+    height: 6px;
+    margin: 1.25rem auto 0;
+    border-radius: 3px;
+    background: $srb-pos;
   }
   .label {
     display: block;
@@ -138,9 +147,11 @@ body { background: $srb-bg; }
   font-size: 1.2rem;
 }
 
-// Farbig hervorgehobene Wörter im Text (passen zu den Plot-Farben)
-.pos { color: $srb-pos; font-weight: 700; }
-.neg { color: $srb-neg; font-weight: 700; }
+// Hervorgehobene Wörter im Text: Schrift bleibt Textfarbe, die Unterstreichung
+// trägt die Plot-Farbe (Text nie in Serienfarbe – Lesbarkeit).
+.pos, .neg { font-weight: 700; color: #fff; text-decoration: underline 3px; text-underline-offset: 4px; }
+.pos { text-decoration-color: $srb-pos; }
+.neg { text-decoration-color: $srb-neg; }
 
 // ---------- Fließtext-Abschnitte (Methodik, Quellen, Team) ----------
 .prose {
