@@ -1,0 +1,37 @@
+<!-- Handy (< 768 px): Scrollytelling ausschalten und linear lesen.
+     Closeread legt alle Grafiken in eine eigene, fest stehende Spalte. Auf dem Handy
+     bleibt dann für den Text nur ein schmaler Streifen. Stattdessen wird jede Grafik
+     direkt vor die erste Textkarte gesetzt, die auf sie verweist (data-focus-on), und
+     steht dort in voller Breite. Die Darstellung regelt html.srb-linear in steam.scss.
+     Wird das Fenster breiter, wandert alles an den alten Platz zurück. -->
+<script>
+(function () {
+  var mq = window.matchMedia("(max-width: 767.98px)");
+  var moved = [];   // { el, parent, next } in der Reihenfolge des Verschiebens
+
+  function linearize() {
+    document.querySelectorAll(".cr-section").forEach(function (section) {
+      section.querySelectorAll(".sticky-col .sticky").forEach(function (sticky) {
+        var trigger = section.querySelector(
+          '.narrative-col .trigger[data-focus-on="' + sticky.id + '"]');
+        if (!trigger) return;
+        moved.push({ el: sticky, parent: sticky.parentNode, next: sticky.nextSibling });
+        trigger.parentNode.insertBefore(sticky, trigger);
+      });
+    });
+    document.documentElement.classList.add("srb-linear");
+  }
+
+  function restore() {
+    document.documentElement.classList.remove("srb-linear");
+    // rückwärts: so ist das jeweils nächste Geschwister schon wieder an seinem Platz
+    for (var i = moved.length - 1; i >= 0; i--) {
+      moved[i].parent.insertBefore(moved[i].el, moved[i].next);
+    }
+    moved = [];
+  }
+
+  if (mq.matches) linearize();
+  mq.addEventListener("change", function (e) { e.matches ? linearize() : restore(); });
+})();
+</script>

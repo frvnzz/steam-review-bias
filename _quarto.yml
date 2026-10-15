@@ -26,7 +26,9 @@ format:
     theme: [darkly, styles/steam.scss]
     toc: false
     smooth-scroll: false   # Lenis übernimmt (js/smooth-scroll.html)
-    include-after-body: js/smooth-scroll.html
+    include-after-body:
+      - js/smooth-scroll.html
+      - js/mobile-linear.html   # Handy: Grafiken zwischen die Absätze statt sticky
     fig-dpi: 200
     fig-width: 7
     fig-height: 4.5

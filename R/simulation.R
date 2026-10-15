@@ -84,7 +84,9 @@ plot_population <- function(s, highlight_reviewers = FALSE) {
     guides(fill = guide_legend(override.aes = list(size = 5, alpha = 1)))
 }
 
-plot_comparison <- function(s) {
+# stacked: Handy-Fassung – Beschriftung über jedem Balken statt links daneben,
+# damit die Balken die volle Breite bekommen
+plot_comparison <- function(s, stacked = FALSE) {
   d <- tibble(
     what = c(
       "Alle Spieler:innen\n(die Wahrheit)",
@@ -96,7 +98,7 @@ plot_comparison <- function(s) {
   ) |>
     mutate(what = factor(what, levels = rev(what)))
 
-  ggplot(d, aes(share, what)) +
+  p <- ggplot(d, aes(share, what)) +
     # Linie hinter den Balken: sichtbar zwischen ihnen, kreuzt aber keine Beschriftung
     geom_vline(xintercept = s$share_true, colour = srb_col[["text"]],
                linetype = "22", linewidth = 0.5) +
@@ -112,5 +114,14 @@ plot_comparison <- function(s) {
          title = "Dieselben Spieler:innen, drei verschiedene Zahlen",
          subtitle = "Die gestrichelte Linie ist der wahre Anteil Zufriedener") +
     theme(panel.grid.major.y = element_blank(),
-          axis.text.y = element_text(colour = srb_col[["text"]], size = 11, hjust = 0))
+          axis.text.y = element_text(colour = srb_col[["text"]], size = rel(1 / 0.85), hjust = 0))   # = Grundschrift (axis.text ist 0,85)
+  if (stacked) {
+    p <- p +
+      facet_wrap(~ factor(what, levels = rev(levels(d$what))), ncol = 1, scales = "free_y") +
+      theme(axis.text.y = element_blank(),
+            plot.margin = margin(4, 20, 4, 14),   # links Platz für „0 %“ (Balken starten am Rand)
+            strip.text = element_text(colour = srb_col[["text"]], hjust = 0, size = rel(0.95),
+                                      lineheight = 1.1, margin = margin(t = 6, b = 4)))
+  }
+  p
 }

@@ -121,8 +121,8 @@ alt <- list(
     "Liniendiagramm der negativen Reviews pro Tag für Borderlands 2, mit und ohne Steams Off-Topic-Filter. Vom %s bis %s liefert die Standardabfrage null Reviews, ohne Filter sind es bis zu %s negative pro Tag.",
     fmt_date(off$from), fmt_date(off$to),
     fmt_num(max(D$daily$n_total[D$daily$game == "Borderlands 2"] - D$daily$n_positive[D$daily$game == "Borderlands 2"]))),
-  factors = "Punktdiagramme mit Unsicherheitsintervallen pro Spiel: Anteil positiver Reviews für Gruppen wie auf Steam gekauft, nicht auf Steam gekauft, kostenlos erhalten, später zurückgegeben und meist auf dem Steam Deck gespielt. Zurückgegebene Spiele werden deutlich seltener positiv bewertet, die Intervalle sind dort sehr breit.",
-  lang = "Punktdiagramme pro Spiel: Anteil positiver Reviews in den sechs häufigsten Sprachen über alle drei Spiele, mit Unsicherheitsintervallen. Die Werte unterscheiden sich je nach Sprache teils deutlich."
+  factors = "Punktdiagramme mit Unsicherheitsintervallen: Anteil positiver Reviews je Spiel für Gruppen wie auf Steam gekauft, nicht auf Steam gekauft, kostenlos erhalten, später zurückgegeben und meist auf dem Steam Deck gespielt. Zurückgegebene Spiele werden deutlich seltener positiv bewertet, die Intervalle sind dort sehr breit.",
+  lang = "Punktdiagramme mit Unsicherheitsintervallen: Anteil positiver Reviews je Spiel in den sechs häufigsten Sprachen über alle drei Spiele. Die Werte unterscheiden sich je nach Sprache teils deutlich."
 )
 ```
 
@@ -209,6 +209,7 @@ plot_population(sim)
 ::: {.d-md-none}
 ```{r}
 #| label: sim-all-plot-mobile
+#| output: asis
 #| fig-width: 4.2
 #| fig-height: 4.8
 #| fig-alt: !expr 'sprintf("Punktewolke mit %d Punkten in einem 20-mal-20-Raster. %d blaue Punkte stehen für zufriedene, %d orange Punkte für unzufriedene Spieler:innen.", sim$n, sim$n_happy, sim$n - sim$n_happy)'
@@ -230,6 +231,7 @@ plot_population(sim, highlight_reviewers = TRUE)
 ::: {.d-md-none}
 ```{r}
 #| label: sim-reviewers-plot-mobile
+#| output: asis
 #| fig-width: 4.2
 #| fig-height: 4.8
 #| fig-alt: !expr 'sprintf("Dieselbe Punktewolke, aber nur %d Punkte sind hervorgehoben: die Reviewer. Davon sind %d blau (zufrieden) und %d orange (unzufrieden), obwohl in der ganzen Wolke Blau deutlich überwiegt.", sim$n_reviewers, sim$n_rev_happy, sim$n_reviewers - sim$n_rev_happy)'
@@ -251,10 +253,11 @@ plot_comparison(sim)
 ::: {.d-md-none}
 ```{r}
 #| label: sim-compare-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 4.4
+#| fig-height: 4.6
 #| fig-alt: !expr 'sprintf("Balkendiagramm: Wahrer Anteil Zufriedener %s. Anteil positiver Reviews, wenn Unzufriedene öfter schreiben: %s. Wenn Zufriedene öfter schreiben: %s.", fmt_pct(sim$share_true), fmt_pct(sim$share_A), fmt_pct(sim$share_B))'
-print_mobile(plot_comparison(sim))
+print_mobile(plot_comparison(sim, stacked = TRUE))
 ```
 :::
 :::
@@ -267,6 +270,7 @@ print_mobile(plot_comparison(sim))
 
 Für die folgenden Kapitel haben wir über die offizielle Steam-Schnittstelle je Spiel die **`r fmt_num(as.integer(D$meta[["max_reviews"]]))` neuesten Reviews** abgerufen (Stand: `r fmt_date(fetched)`). Das ist keine Zufallsstichprobe aus allen Reviews, sondern ein Blick auf die letzten Wochen bzw. Monate. Beide Spalten umfassen alle Kaufarten, Steams angezeigte Wertung zählt dagegen nur Steam-Käufe (mehr dazu in Kapitel 6):
 
+::: {.d-none .d-md-block}
 ```{r}
 #| label: sample-table
 sample_info |>
@@ -278,6 +282,21 @@ sample_info |>
   ) |>
   knitr::kable(align = "lrr", escape = FALSE)
 ```
+:::
+
+::: {.d-md-none}
+```{r}
+#| label: sample-table-mobile
+#| output: asis
+# Am Handy: ein Block pro Spiel statt drei schmaler Tabellenspalten
+cat('<dl class="sample-cards">')
+for (i in seq_len(nrow(sample_info))) with(sample_info[i, ], cat(sprintf(
+  '<div class="sample-card"><dt>%s</dt><dd><span class="k">Alle Reviews</span> %s · %s positiv</dd><dd><span class="k">Unsere Stichprobe</span> %s neueste · %s positiv<br><small>%s–%s</small></dd></div>',
+  html_escape(as.character(game)), fmt_num(total_reviews), fmt_pct(all_share),
+  fmt_num(n), fmt_pct(share), fmt_date(from), fmt_date(to))))
+cat("</dl>\n")
+```
+:::
 :::
 :::
 
@@ -317,8 +336,9 @@ plot_playtime_hist(r, BG3)
 ::: {.d-md-none}
 ```{r}
 #| label: pt-hist-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 4.4
+#| fig-height: 5.1
 #| fig-alt: !expr alt$hist
 print_mobile(plot_playtime_hist(r, BG3))
 ```
@@ -338,8 +358,9 @@ plot_share_by_playtime(r)
 ::: {.d-md-none}
 ```{r}
 #| label: pt-share-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 5.4
+#| fig-height: 6.2
 #| fig-alt: !expr alt$pt_share
 print_mobile(plot_share_by_playtime(r))
 ```
@@ -378,8 +399,9 @@ plot_reviewer_mix(r)
 ::: {.d-md-none}
 ```{r}
 #| label: rv-mix-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 5.6
+#| fig-height: 6.4
 #| fig-alt: !expr alt$rv_mix
 print_mobile(plot_reviewer_mix(r), facet = facet_wrap(~game, ncol = 1))
 ```
@@ -399,8 +421,9 @@ plot_reviewer_share(r)
 ::: {.d-md-none}
 ```{r}
 #| label: rv-share-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 5.4
+#| fig-height: 6.2
 #| fig-alt: !expr alt$rv_share
 print_mobile(plot_reviewer_share(r))
 ```
@@ -443,8 +466,9 @@ plot_daily_volume(D$daily, HD2, shade = spike$days)
 ::: {.d-md-none}
 ```{r}
 #| label: hd-volume-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 4.2
+#| fig-height: 4.8
 #| fig-alt: !expr alt$hd_volume
 print_mobile(plot_daily_volume(D$daily, HD2, shade = spike$days), date_breaks = "1 month")
 ```
@@ -464,8 +488,9 @@ plot_daily_share(D$daily, HD2, shade = spike$days)
 ::: {.d-md-none}
 ```{r}
 #| label: hd-share-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 4.2
+#| fig-height: 4.8
 #| fig-alt: !expr alt$hd_share
 print_mobile(plot_daily_share(D$daily, HD2, shade = spike$days), date_breaks = "1 month")
 ```
@@ -485,10 +510,11 @@ plot_offtopic(D$daily, "Borderlands 2")
 ::: {.d-md-none}
 ```{r}
 #| label: bl-offtopic-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 4.6
+#| fig-height: 5.3
 #| fig-alt: !expr alt$offtopic
-print_mobile(plot_offtopic(D$daily, "Borderlands 2"), date_breaks = "1 month")
+print_mobile(plot_offtopic(D$daily, "Borderlands 2", short_legend = TRUE), date_breaks = "1 month")
 ```
 :::
 :::
@@ -531,10 +557,11 @@ plot_factors(r)
 ::: {.d-md-none}
 ```{r}
 #| label: factors-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 5.8
+#| fig-height: 8.2
 #| fig-alt: !expr alt$factors
-print_mobile(plot_factors(r), facet = facet_wrap(~game, ncol = 1), drop = "GeomText")
+print_mobile(plot_factors_mobile(r))
 ```
 :::
 :::
@@ -552,10 +579,11 @@ plot_languages(r)
 ::: {.d-md-none}
 ```{r}
 #| label: lang-plot-mobile
+#| output: asis
 #| fig-width: 4.2
-#| fig-height: 5.8
+#| fig-height: 9.4
 #| fig-alt: !expr alt$lang
-print_mobile(plot_languages(r), facet = facet_wrap(~game, ncol = 1))
+print_mobile(plot_languages_mobile(r))
 ```
 :::
 :::

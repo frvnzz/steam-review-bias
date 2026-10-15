@@ -24,6 +24,9 @@ theme_srb <- function(base_size = 13) {
       panel.background  = element_rect(fill = "transparent", colour = NA),
       panel.grid.major  = element_line(colour = srb_col[["grid"]], linewidth = 0.35),
       panel.grid.minor  = element_blank(),
+      # ohne `size`: %+replace% ersetzt das ganze Element, die Schrift fällt dadurch auf
+      # ggplots 11 pt zurück (base_size steuert nur die Abstände). Die Desktop-Grafiken
+      # sind so abgestimmt; die Handy-Fassung setzt die Größe ausdrücklich (R/mobile.R).
       text              = element_text(colour = srb_col[["text"]]),
       axis.text         = element_text(colour = srb_col[["muted"]], size = rel(0.85)),
       axis.title        = element_text(colour = srb_col[["muted"]], size = rel(0.9)),

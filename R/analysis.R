@@ -174,17 +174,19 @@ plot_daily_share <- function(daily, which_game, shade = NULL) {
   add_shade(p, shade)
 }
 
-plot_offtopic <- function(daily, which_game) {
+# short_legend: kürzere Legende für die Handy-Fassung
+plot_offtopic <- function(daily, which_game, short_legend = FALSE) {
+  lab_all <- "Ohne Filter: alle Reviews"
+  lab_std <- if (short_legend) "Standard: Off-Topic ausgeblendet"
+             else "Standardansicht: Off-Topic-Phasen ausgeblendet"
   d <- daily |>
     filter(game == which_game) |>
     mutate(n_negative = n_total - n_positive,
-           variant = if_else(filter_offtopic, "Standardansicht: Off-Topic-Phasen ausgeblendet",
-                             "Ohne Filter: alle Reviews"))
+           variant = if_else(filter_offtopic, lab_std, lab_all))
   ggplot(d, aes(date, n_negative, colour = variant)) +
     geom_line(linewidth = 0.8) +
     scale_colour_manual(values = c(srb_col[["neg"]], srb_col[["muted"]]),
-                        breaks = c("Ohne Filter: alle Reviews",
-                                   "Standardansicht: Off-Topic-Phasen ausgeblendet")) +
+                        breaks = c(lab_all, lab_std)) +
     scale_y_continuous(labels = \(x) fmt_num(x)) +
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
     labs(x = NULL, y = "Negative Reviews pro Tag",
