@@ -7,8 +7,6 @@ subtitle: "Wer auf Steam Reviews schreibt – und warum die Prozentzahl deshalb 
 #| label: setup
 #| include: false
 source("R/theme.R")
-source("scripts/sync_authors.R")
-team <- check_authors()   # bricht ab, wenn CITATION.cff und _quarto.yml auseinanderlaufen
 ```
 
 <!-- ===================================================================== -->
@@ -203,10 +201,7 @@ Platzhalter: Steamworks-Doku `IUserReviewsService/GetAppReviews`, Abrufdatum.
 
 ### Team
 
-```{r}
-#| results: asis
-cat("<ul class='team-list'>", paste0("<li>", team, "</li>", collapse = ""), "</ul>", sep = "")
-```
+{{< team >}}
 
 Quellcode: <https://github.com/frvnzz/steam-review-bias>
 :::

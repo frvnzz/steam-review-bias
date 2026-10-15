@@ -12,12 +12,12 @@ execute:
 
 lang: de
 
-# >>> authors – wird aus CITATION.cff erzeugt: Rscript scripts/sync_authors.R --fix
-author:
-  - name: "[Vorname 1] [Nachname 1]"
-  - name: "[Vorname 2] [Nachname 2]"
-  - name: "[Vorname 3] [Nachname 3]"
-# <<< authors
+# Gruppenmitglieder (author:) stehen in _team.yml – nur dort eintragen.
+metadata-files:
+  - _team.yml
+
+shortcodes:
+  - shortcodes/team.lua
 
 format:
   closeread-html:

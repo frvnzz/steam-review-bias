@@ -3,7 +3,7 @@
 Scrollytelling-Webseite über **Selektionsbias in Steam-User-Reviews**: Die Zahl „X % positiv“ beschreibt nicht alle Spieler:innen, sondern nur die, die sich entschieden haben, eine Review zu schreiben.
 
 - **Seite:** <https://frvnzz.github.io/steam-review-bias/>
-- **Team:** siehe [`CITATION.cff`](CITATION.cff) (wird auch im Titelblock und im Team-Abschnitt der Seite angezeigt)
+- **Team:** siehe [`_team.yml`](_team.yml) – die einzige Stelle, an der Namen eingetragen werden
 - Gruppenassignment Statistik · Sprache: Deutsch
 
 ## Aufbau
@@ -11,12 +11,14 @@ Scrollytelling-Webseite über **Selektionsbias in Steam-User-Reviews**: Die Zahl
 | Pfad | Inhalt |
 |---|---|
 | `index.qmd` | die Scrollytelling-Seite (Quarto + [Closeread](https://closeread.dev)) |
-| `_quarto.yml` | Projekt- und Format-Konfiguration, `author:`-Block |
+| `_quarto.yml` | Projekt- und Format-Konfiguration |
+| `_team.yml` | Gruppenmitglieder (einzige Quelle für alle Namen) |
 | `styles/steam.scss` | eigenes Theme (dunkles Blau, Akzentblau; System-Schriften) |
 | `R/fetch_reviews.R` | Abruf über die Steam-API → `data-raw/` (Cache, gitignored) |
 | `R/clean_reviews.R` | Bereinigung → `data/` (ohne IDs, ohne Freitext) |
 | `R/theme.R` | ggplot2-Theme + Zahlenformate |
-| `scripts/sync_authors.R` | prüft/synchronisiert Namen zwischen `CITATION.cff` und `_quarto.yml` |
+| `scripts/sync_team.R` | überträgt die Namen aus `_team.yml` nach `CITATION.cff` |
+| `shortcodes/team.lua` | Team-Liste auf der Seite + Konsistenz-Check gegen `CITATION.cff` |
 | `data/` | bereinigte, committbare Daten |
 | `_freeze/` | eingefrorene R-Ergebnisse – CI braucht dadurch kein R |
 | `_extensions/` | Closeread-Extension |
@@ -58,13 +60,21 @@ Das Repo ist öffentlich. Rohdaten mit `steamid` und Review-Texten liegen nur in
 
 ## Namen der Gruppenmitglieder
 
-`CITATION.cff` ist die Quelle der Wahrheit. Nach Änderungen:
+Namen werden **nur in [`_team.yml`](_team.yml)** eingetragen. Neue Person: einen Block kopieren und ausfüllen. Optional sind `email`, `orcid` und `affiliations` möglich, die Reihenfolge der Blöcke ist die Anzeige-Reihenfolge.
 
 ```sh
-Rscript scripts/sync_authors.R --fix   # schreibt den author-Block in _quarto.yml neu
+Rscript scripts/sync_team.R   # überträgt die Namen nach CITATION.cff
+quarto render                 # Seite neu bauen
+git add _team.yml CITATION.cff _freeze && git commit -m "Team aktualisiert" && git push
 ```
 
-Beim Rendern prüft `index.qmd` die Konsistenz und bricht bei Abweichungen ab.
+| Wo die Namen erscheinen | Wie sie dort hinkommen |
+|---|---|
+| Titelblock der Seite | Quarto lädt `_team.yml` über `metadata-files` in `_quarto.yml` |
+| Team-Abschnitt | Shortcode `{{< team >}}` (`shortcodes/team.lua`) |
+| `CITATION.cff` | `scripts/sync_team.R` |
+
+Passen `_team.yml` und `CITATION.cff` nicht zusammen, bricht `quarto render` mit einer Fehlermeldung ab, lokal **und** in der GitHub Action. So geht nie eine Seite mit falschen Namen online.
 
 ## Deployment (GitHub Pages)
 

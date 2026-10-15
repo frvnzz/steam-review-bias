@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# Gruppenmitglieder – die EINZIGE Stelle, an der Namen eingetragen werden.
+#
+# Von hier übernommen in:
+#   • Titelblock der Seite   – Quarto liest diese Datei (metadata-files in _quarto.yml)
+#   • Team-Abschnitt         – Shortcode "team" in index.qmd
+#   • CITATION.cff           – nach jeder Änderung ausführen:
+#                                Rscript scripts/sync_team.R
+#
+# Neue Person: einen Block kopieren und ausfüllen. Reihenfolge = Anzeige-Reihenfolge.
+# Optionale Felder je Person:
+#     email: "name@example.org"
+#     orcid: "0000-0000-0000-0000"
+#     affiliations:
+#       - name: "Name der Hochschule"
+# ---------------------------------------------------------------------------
+
+author:
+  - name:
+      given: "[Vorname 1]"
+      family: "[Nachname 1]"
+  - name:
+      given: "[Vorname 2]"
+      family: "[Nachname 2]"
+  - name:
+      given: "[Vorname 3]"
+      family: "[Nachname 3]"
