@@ -1,0 +1,30 @@
+# Secrets & lokale R-Dateien
+.Renviron
+.Rhistory
+.RData
+.Rproj.user/
+
+# Rohdaten (enthalten steamid + Review-Texte) – niemals committen
+data-raw/
+
+# Quarto-Build
+_site/
+/.quarto/
+*_files/
+index.html
+
+# renv: nur Lockfile + Aktivierung committen
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/sandbox/
+renv/staging/
+
+# Screenshot-Ausgabe
+screenshot/
+
+.DS_Store
+
+**/*.quarto_ipynb
