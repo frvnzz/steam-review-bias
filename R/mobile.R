@@ -23,10 +23,24 @@ theme_srb_mobile <- function() {
     )
 }
 
-# Zeilenumbruch für Beschriftungen (Breite in Zeichen, passend zu 4,2 Zoll Grafikbreite)
+# Zeilenumbruch für Beschriftungen (Breite in Zeichen, passend zu 4,2 Zoll Grafikbreite).
+# Untertitel wie „A · B · C“ brechen bevorzugt an den Trennpunkten um; der Punkt
+# entfällt dort, statt am Zeilenanfang oder -ende zu hängen.
 wrap_label <- function(x, width) {
   if (is.null(x) || !is.character(x)) return(x)
-  paste(strwrap(x, width), collapse = "\n")
+  lines <- character()
+  cur <- ""
+  for (part in strsplit(x, " · ", fixed = TRUE)[[1]]) {
+    cand <- if (nzchar(cur)) paste0(cur, " · ", part) else part
+    if (!nzchar(cur) || nchar(cand) <= width) {
+      cur <- cand
+    } else {
+      lines <- c(lines, cur)
+      cur <- part
+    }
+  }
+  lines <- c(lines, cur)
+  paste(unlist(lapply(lines, strwrap, width = width)), collapse = "\n")
 }
 
 #' @param p           fertige ggplot-Grafik (Desktop-Fassung)

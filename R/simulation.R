@@ -97,14 +97,17 @@ plot_comparison <- function(s) {
     mutate(what = factor(what, levels = rev(what)))
 
   ggplot(d, aes(share, what)) +
-    geom_col(aes(fill = truth), width = 0.62) +
+    # Linie hinter den Balken: sichtbar zwischen ihnen, kreuzt aber keine Beschriftung
     geom_vline(xintercept = s$share_true, colour = srb_col[["text"]],
                linetype = "22", linewidth = 0.5) +
-    geom_text(aes(label = fmt_pct(share)), hjust = -0.15, size = 5.2, fontface = "bold") +
+    geom_col(aes(fill = truth), width = 0.62) +
+    # Beschriftung innen am Balkenende: kollidiert so nie mit der gestrichelten Linie
+    geom_text(aes(label = fmt_pct(share)), hjust = 1.15, size = 5.2, fontface = "bold",
+              colour = "#ffffff") +
     scale_fill_manual(values = c(`TRUE` = srb_col[["grey"]], `FALSE` = srb_col[["pos"]]),
                       guide = "none") +
-    scale_x_continuous(labels = \(x) fmt_pct(x), limits = c(0, 1.14),
-                       breaks = seq(0, 1, 0.25), expand = c(0, 0)) +
+    scale_x_continuous(labels = \(x) fmt_pct(x), limits = c(0, 1),
+                       breaks = seq(0, 1, 0.25), expand = expansion(mult = c(0, 0.04))) +
     labs(x = "Anteil zufrieden bzw. positiv", y = NULL,
          title = "Dieselben Spieler:innen, drei verschiedene Zahlen",
          subtitle = "Die gestrichelte Linie ist der wahre Anteil Zufriedener") +

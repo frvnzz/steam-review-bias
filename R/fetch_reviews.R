@@ -49,7 +49,8 @@ cache_dir  <- file.path("data-raw", "cache")
 FILTER_RECENT      <- 1L
 REVIEW_TYPE_ALL    <- 0L
 REVIEW_TYPE_POS    <- 1L
-PURCHASE_TYPE_ALL  <- 1L
+PURCHASE_TYPE_STEAM <- 0L   # nur Käufe über Steam: Grundlage von Steams angezeigter Wertung
+PURCHASE_TYPE_ALL  <- 1L    # alle Kaufarten (auch aktivierte Keys)
 
 get_reviews_page <- function(params) {
   input_json <- as.character(toJSON(params, auto_unbox = TRUE))
@@ -158,21 +159,31 @@ fetch_daily_counts <- function(appid, start, end) {
 
 # ---- Gesamtzahlen (query_summary, nur auf der ersten Seite) ------------------
 
-fetch_summary <- function(appid) {
+query_summary <- function(appid, purchase_type) {
   page <- get_reviews_page(list(
     appid = appid,
     filter = FILTER_RECENT,
     languages = list("all"),
     review_type = REVIEW_TYPE_ALL,
-    purchase_type = PURCHASE_TYPE_ALL,
+    purchase_type = purchase_type,
     num_per_page = 1L,
     cursor = "*"
   ))
-  s <- page$response$query_summary
-  data.frame(appid = appid, fetched_at = page$fetched_at,
-             review_score_desc = s$review_score_desc,
-             total_positive = s$total_positive, total_negative = s$total_negative,
-             total_reviews = s$total_reviews)
+  c(page$response$query_summary, fetched_at = page$fetched_at)
+}
+
+# Steams Wertung im Shop zählt laut Steamworks-Doku nur Reviews von Steam-Käufen
+# (keine Key-Aktivierungen). Stichprobe und Tageswerte enthalten dagegen alle
+# Kaufarten – für Vergleiche damit gibt es die Gesamtzahlen zusätzlich als *_all.
+fetch_summary <- function(appid) {
+  st <- query_summary(appid, PURCHASE_TYPE_STEAM)
+  al <- query_summary(appid, PURCHASE_TYPE_ALL)
+  data.frame(appid = appid, fetched_at = st$fetched_at,
+             review_score_desc = st$review_score_desc,
+             total_positive = st$total_positive, total_negative = st$total_negative,
+             total_reviews = st$total_reviews,
+             total_positive_all = al$total_positive, total_negative_all = al$total_negative,
+             total_reviews_all = al$total_reviews)
 }
 
 # ---- Hauptprogramm ----------------------------------------------------------

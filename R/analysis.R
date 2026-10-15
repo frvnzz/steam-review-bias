@@ -18,8 +18,11 @@ load_data <- function() {
   meta <- read_csv("data/meta.csv", show_col_types = FALSE)
   list(
     reviews   = reviews,
+    # share_pos: nur Steam-Käufe, wie in Steams Wertung; share_pos_all: alle Kaufarten,
+    # vergleichbar mit Stichprobe und Tageswerten
     summaries = read_csv("data/summaries.csv", show_col_types = FALSE) |>
-      mutate(share_pos = total_positive / total_reviews),
+      mutate(share_pos = total_positive / total_reviews,
+             share_pos_all = total_positive_all / total_reviews_all),
     daily     = read_csv("data/daily_counts.csv", show_col_types = FALSE) |>
       mutate(share_pos = n_positive / n_total),
     meta      = setNames(meta$value, meta$key)
@@ -100,7 +103,7 @@ plot_share_by_playtime <- function(reviews) {
     scale_y_continuous(labels = \(x) fmt_pct(x), limits = c(NA, 1)) +
     labs(x = "Spielzeit beim Schreiben der Review", y = "Anteil positiv",
          title = "Wer früh bewertet, urteilt oft anders",
-         subtitle = "Anteil positiver Reviews je Spielzeit-Gruppe · Striche: 95-%-Unsicherheitsintervall",
+         subtitle = "Anteil positiver Reviews je Spielzeit-Gruppe · Striche: 95-%-Unsicherheitsintervall · y-Achse beginnt nicht bei 0 %",
          caption = "Gruppen mit weniger als 30 Reviews ausgeblendet") +
     theme(axis.text.x = element_text(angle = 35, hjust = 1))
 }
@@ -135,11 +138,11 @@ plot_reviewer_share <- function(reviews) {
     geom_linerange(aes(ymin = lo, ymax = hi), colour = srb_col[["muted"]], linewidth = 0.6) +
     geom_line(colour = srb_col[["pos"]], linewidth = 0.8) +
     geom_point(colour = srb_col[["pos"]], size = 2.4) +
-    facet_wrap(~game, ncol = 1, scales = "free_y") +
-    scale_y_continuous(labels = \(x) fmt_pct(x)) +
+    facet_wrap(~game, ncol = 1) +   # gemeinsame y-Achse: Unterschiede nicht optisch aufblähen
+    scale_y_continuous(labels = \(x) fmt_pct(x), limits = c(NA, 1)) +
     labs(x = "Reviews, die die Person insgesamt geschrieben hat", y = "Anteil positiv",
          title = "Viel-Reviewer bewerten seltener positiv",
-         subtitle = "Anteil positiver Reviews · Striche: 95-%-Unsicherheitsintervall · y-Achse je Spiel unterschiedlich",
+         subtitle = "Anteil positiver Reviews · Striche: 95-%-Unsicherheitsintervall · y-Achse beginnt nicht bei 0 %",
          caption = "Gruppen mit weniger als 30 Reviews ausgeblendet")
 }
 
@@ -196,7 +199,7 @@ factor_table <- function(reviews) {
   groups <- list(
     "Auf Steam gekauft"          = reviews$steam_purchase,
     "Nicht auf Steam gekauft"    = !reviews$steam_purchase,
-    "Als „geschenkt“ markiert"   = reviews$received_for_free,
+    "Kostenlos erhalten"         = reviews$received_for_free,   # Häkchen der Autor:innen, kein Steam-Geschenk
     "Später zurückgegeben"       = reviews$refunded,
     "Meist auf dem Steam Deck"   = reviews$primarily_steam_deck
   )
@@ -248,7 +251,7 @@ plot_languages <- function(reviews, top = 6) {
     scale_x_continuous(labels = \(x) fmt_pct(x)) +
     labs(x = "Anteil positiv", y = NULL,
          title = "Je nach Sprache ein anderes Bild",
-         subtitle = paste0("Die ", top, " häufigsten Sprachen · Striche: 95-%-Unsicherheitsintervall")) +
+         subtitle = paste0("Die ", top, " häufigsten Sprachen über alle drei Spiele · Striche: 95-%-Unsicherheitsintervall")) +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
 }
 
