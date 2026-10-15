@@ -8,6 +8,7 @@ subtitle: "Wer auf Steam Reviews schreibt – und warum die Prozentzahl deshalb 
 #| include: false
 source("R/theme.R")
 source("R/analysis.R")
+source("R/mobile.R")
 library(purrr)
 
 D <- load_data()
@@ -154,6 +155,7 @@ Die Verzerrung kann genauso gut in die andere Richtung gehen. Schreiben die *Zuf
 Das Problem: Bei echten Spielen sehen wir nur die Reviews – nie die stille Mehrheit. Wir wissen also nicht einmal, in welche Richtung die Zahl verzerrt ist. Wir können aber schauen, *wer* die Reviewer sind und *wann* sie schreiben. Genau das machen wir jetzt mit echten Steam-Daten. @cr-sim-compare
 
 ::: {#cr-sim-all}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: sim-all-plot
 #| fig-width: 6
@@ -162,8 +164,19 @@ Das Problem: Bei echten Spielen sehen wir nur die Reviews – nie die stille Meh
 plot_population(sim)
 ```
 :::
+::: {.d-md-none}
+```{r}
+#| label: sim-all-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 4.8
+#| fig-alt: !expr 'sprintf("Punktewolke mit %d Punkten in einem 20-mal-20-Raster. %d blaue Punkte stehen für zufriedene, %d orange Punkte für unzufriedene Spieler:innen.", sim$n, sim$n_happy, sim$n - sim$n_happy)'
+print_mobile(plot_population(sim), size_scale = 0.6)
+```
+:::
+:::
 
 ::: {#cr-sim-reviewers}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: sim-reviewers-plot
 #| fig-width: 6
@@ -172,8 +185,19 @@ plot_population(sim)
 plot_population(sim, highlight_reviewers = TRUE)
 ```
 :::
+::: {.d-md-none}
+```{r}
+#| label: sim-reviewers-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 4.8
+#| fig-alt: !expr 'sprintf("Dieselbe Punktewolke, aber nur %d Punkte sind hervorgehoben: die Reviewer. Davon sind %d blau (zufrieden) und %d orange (unzufrieden), obwohl in der ganzen Wolke Blau deutlich überwiegt.", sim$n_reviewers, sim$n_rev_happy, sim$n_reviewers - sim$n_rev_happy)'
+print_mobile(plot_population(sim, highlight_reviewers = TRUE), size_scale = 0.6)
+```
+:::
+:::
 
 ::: {#cr-sim-compare}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: sim-compare-plot
 #| fig-width: 7
@@ -181,6 +205,16 @@ plot_population(sim, highlight_reviewers = TRUE)
 #| fig-alt: !expr 'sprintf("Balkendiagramm: Wahrer Anteil Zufriedener %s. Anteil positiver Reviews, wenn Unzufriedene öfter schreiben: %s. Wenn Zufriedene öfter schreiben: %s.", fmt_pct(sim$share_true), fmt_pct(sim$share_A), fmt_pct(sim$share_B))'
 plot_comparison(sim)
 ```
+:::
+::: {.d-md-none}
+```{r}
+#| label: sim-compare-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 4.4
+#| fig-alt: !expr 'sprintf("Balkendiagramm: Wahrer Anteil Zufriedener %s. Anteil positiver Reviews, wenn Unzufriedene öfter schreiben: %s. Wenn Zufriedene öfter schreiben: %s.", fmt_pct(sim$share_true), fmt_pct(sim$share_A), fmt_pct(sim$share_B))'
+print_mobile(plot_comparison(sim))
+```
+:::
 :::
 
 ::::
@@ -196,13 +230,11 @@ Für die folgenden Kapitel haben wir über die offizielle Steam-Schnittstelle je
 sample_info |>
   transmute(
     Spiel = game,
-    `Reviews gesamt` = fmt_num(total_reviews),
-    `davon positiv` = fmt_pct(all_share),
-    `Stichprobe` = fmt_num(n),
-    `Zeitraum der Stichprobe` = paste(fmt_date(from), "–", fmt_date(to)),
-    `positiv in Stichprobe` = fmt_pct(share)
+    `Alle Reviews` = paste0(fmt_num(total_reviews), "<br><small>", fmt_pct(all_share), " positiv</small>"),
+    `Unsere Stichprobe` = paste0(fmt_num(n), " neueste<br><small>", fmt_date(from), "–", fmt_date(to),
+                                 " · ", fmt_pct(share), " positiv</small>")
   ) |>
-  knitr::kable(align = "lrrrcr")
+  knitr::kable(align = "lrr", escape = FALSE)
 ```
 :::
 :::
@@ -231,6 +263,7 @@ Mehr Spielzeit heißt aber nicht automatisch mehr Begeisterung: Bei *Helldivers 
 Und: Eine Review ist eine Momentaufnahme. Je nach Spiel haben `r fmt_pct(min(kept_playing$share))` bis `r fmt_pct(max(kept_playing$share))` der Autor:innen nach ihrer Review weitergespielt – die Review hält trotzdem den Stand vom Moment des Schreibens fest. @cr-pt-share
 
 ::: {#cr-pt-hist}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: pt-hist-plot
 #| fig-width: 7
@@ -239,8 +272,19 @@ Und: Eine Review ist eine Momentaufnahme. Je nach Spiel haben `r fmt_pct(min(kep
 plot_playtime_hist(r, BG3)
 ```
 :::
+::: {.d-md-none}
+```{r}
+#| label: pt-hist-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 4.4
+#| fig-alt: !expr alt$hist
+print_mobile(plot_playtime_hist(r, BG3))
+```
+:::
+:::
 
 ::: {#cr-pt-share}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: pt-share-plot
 #| fig-width: 7
@@ -248,6 +292,16 @@ plot_playtime_hist(r, BG3)
 #| fig-alt: !expr alt$pt_share
 plot_share_by_playtime(r)
 ```
+:::
+::: {.d-md-none}
+```{r}
+#| label: pt-share-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 5.4
+#| fig-alt: !expr alt$pt_share
+print_mobile(plot_share_by_playtime(r))
+```
+:::
 :::
 
 ::::
@@ -270,6 +324,7 @@ Die Richtung ist bei allen drei Spielen gleich: **Je mehr jemand rezensiert, des
 Zwei Einschränkungen: Die Zahl der Reviews ist der **heutige** Stand, nicht der zum Zeitpunkt der Review. Und die Zahl der Spiele im Besitz, die Steam früher mitlieferte, gibt die aktuelle Schnittstelle nicht mehr heraus. @cr-rv-share
 
 ::: {#cr-rv-mix}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: rv-mix-plot
 #| fig-width: 8
@@ -278,8 +333,19 @@ Zwei Einschränkungen: Die Zahl der Reviews ist der **heutige** Stand, nicht der
 plot_reviewer_mix(r)
 ```
 :::
+::: {.d-md-none}
+```{r}
+#| label: rv-mix-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 5.6
+#| fig-alt: !expr alt$rv_mix
+print_mobile(plot_reviewer_mix(r), facet = facet_wrap(~game, ncol = 1))
+```
+:::
+:::
 
 ::: {#cr-rv-share}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: rv-share-plot
 #| fig-width: 7
@@ -287,6 +353,16 @@ plot_reviewer_mix(r)
 #| fig-alt: !expr alt$rv_share
 plot_reviewer_share(r)
 ```
+:::
+::: {.d-md-none}
+```{r}
+#| label: rv-share-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 5.4
+#| fig-alt: !expr alt$rv_share
+print_mobile(plot_reviewer_share(r))
+```
+:::
 :::
 
 ::::
@@ -313,6 +389,7 @@ Ganz anders bei *Borderlands 2* im Frühjahr 2019: Valve hat diese Phase als „
 Steam blendet dabei den **ganzen Zeitraum** aus – auch die positiven Reviews. Die Steamworks-Doku sagt dazu: Bei Off-Topic-Bombs zählen diese Reviews nicht zum Gesamtscore. Was „off-topic“ ist, entscheidet Valve – Kritik an Geschäftspraktiken zählt laut Doku ausdrücklich als legitimer Review-Grund. Die Plattform selbst trifft also eine Auswahl, *welche* Stimmen in die Zahl eingehen. @cr-bl-offtopic
 
 ::: {#cr-hd-volume}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: hd-volume-plot
 #| fig-width: 7.5
@@ -321,8 +398,19 @@ Steam blendet dabei den **ganzen Zeitraum** aus – auch die positiven Reviews. 
 plot_daily_volume(D$daily, HD2, shade = spike$days)
 ```
 :::
+::: {.d-md-none}
+```{r}
+#| label: hd-volume-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 4.2
+#| fig-alt: !expr alt$hd_volume
+print_mobile(plot_daily_volume(D$daily, HD2, shade = spike$days), date_breaks = "1 month")
+```
+:::
+:::
 
 ::: {#cr-hd-share}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: hd-share-plot
 #| fig-width: 7.5
@@ -331,8 +419,19 @@ plot_daily_volume(D$daily, HD2, shade = spike$days)
 plot_daily_share(D$daily, HD2, shade = spike$days)
 ```
 :::
+::: {.d-md-none}
+```{r}
+#| label: hd-share-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 4.2
+#| fig-alt: !expr alt$hd_share
+print_mobile(plot_daily_share(D$daily, HD2, shade = spike$days), date_breaks = "1 month")
+```
+:::
+:::
 
 ::: {#cr-bl-offtopic}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: bl-offtopic-plot
 #| fig-width: 7.5
@@ -340,6 +439,16 @@ plot_daily_share(D$daily, HD2, shade = spike$days)
 #| fig-alt: !expr alt$offtopic
 plot_offtopic(D$daily, "Borderlands 2")
 ```
+:::
+::: {.d-md-none}
+```{r}
+#| label: bl-offtopic-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 4.6
+#| fig-alt: !expr alt$offtopic
+print_mobile(plot_offtopic(D$daily, "Borderlands 2"), date_breaks = "1 month")
+```
+:::
 :::
 
 ::::
@@ -366,6 +475,7 @@ Deutliche Unterschiede gibt es dagegen zwischen **Sprachen**: Bei *Helldivers 2*
 Die Gesamtzahl auf der Store-Seite mischt all diese Gruppen. Warum sich Sprachgruppen unterscheiden – andere Erwartungen, andere Server, andere Zeitpunkte –, verraten die Daten nicht. Sie zeigen nur: **Wer** schreibt, verändert die Zahl. @cr-lang
 
 ::: {#cr-factors}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: factors-plot
 #| fig-width: 8.5
@@ -374,8 +484,19 @@ Die Gesamtzahl auf der Store-Seite mischt all diese Gruppen. Warum sich Sprachgr
 plot_factors(r)
 ```
 :::
+::: {.d-md-none}
+```{r}
+#| label: factors-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 5.8
+#| fig-alt: !expr alt$factors
+print_mobile(plot_factors(r), facet = facet_wrap(~game, ncol = 1), drop = "GeomText")
+```
+:::
+:::
 
 ::: {#cr-lang}
+::: {.d-none .d-md-block}
 ```{r}
 #| label: lang-plot
 #| fig-width: 8.5
@@ -383,6 +504,16 @@ plot_factors(r)
 #| fig-alt: !expr alt$lang
 plot_languages(r)
 ```
+:::
+::: {.d-md-none}
+```{r}
+#| label: lang-plot-mobile
+#| fig-width: 4.2
+#| fig-height: 5.8
+#| fig-alt: !expr alt$lang
+print_mobile(plot_languages(r), facet = facet_wrap(~game, ncol = 1))
+```
+:::
 :::
 
 ::::
