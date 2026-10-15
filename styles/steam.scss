@@ -35,6 +35,10 @@ $line-height-base: 1.6;
 body { background: $srb-bg; }
 
 // ---------- Titelblock ----------
+// Quarto gibt dem Inhaltsbereich oben 1em Abstand; ohne den beginnt der
+// Titel-Farbverlauf direkt am oberen Rand (sonst dünner dunkler Streifen).
+main#quarto-document-content { margin-top: 0; }
+
 #title-block-header {
   grid-column: screen-start / screen-end;   // volle Breite statt Textspalte
   margin-block: 0 !important;
