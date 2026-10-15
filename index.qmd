@@ -625,3 +625,10 @@ Alle Spiel- und Markennamen gehören ihren jeweiligen Inhabern. Diese Seite ist 
 
 {{< team >}}
 :::
+
+<!-- ===================================================================== -->
+::: {.site-footer role="contentinfo"}
+[Ein Projekt von {{< team inline >}}]{.footer-team}
+
+[[]{.bi .bi-github aria-hidden="true"} Code und Daten auf GitHub []{.bi .bi-box-arrow-up-right .footer-ext aria-hidden="true"}[(öffnet in neuem Tab)]{.visually-hidden}](https://github.com/frvnzz/steam-review-bias){.footer-link target="_blank" rel="noopener"}
+:::

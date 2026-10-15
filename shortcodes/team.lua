@@ -1,6 +1,7 @@
 -- Shortcode {{< team >}}: listet die Gruppenmitglieder aus _team.yml auf
 -- (Quarto lädt die Datei als Metadaten) und prüft dabei, ob CITATION.cff
 -- dieselben Namen in derselben Reihenfolge enthält. Läuft ohne R, also auch in der CI.
+-- {{< team inline >}} liefert die Namen als Fließtext („A, B und C“), z. B. für den Footer.
 
 local stringify = pandoc.utils.stringify
 
@@ -50,6 +51,18 @@ return {
                       "  CITATION.cff: " .. table.concat(cff, ", ") .. "\n" ..
                       "Beheben mit: Rscript scripts/sync_team.R\n\n")
       os.exit(1)
+    end
+
+    if args[1] and stringify(args[1]) == "inline" then
+      -- jeder Name in einem .nowrap-Span: nie über zwei Zeilen getrennt (auch nicht am Bindestrich)
+      local out = {}
+      for i, name in ipairs(team) do
+        if i > 1 then
+          table.insert(out, pandoc.Str(i == #team and " und " or ", "))
+        end
+        table.insert(out, pandoc.Span({ pandoc.Str(name) }, pandoc.Attr("", { "nowrap" })))
+      end
+      return pandoc.Inlines(out)
     end
 
     local items = {}

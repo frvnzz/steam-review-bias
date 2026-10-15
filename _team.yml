@@ -4,6 +4,7 @@
 # Von hier übernommen in:
 #   • Titelblock der Seite   – Quarto liest diese Datei (metadata-files in _quarto.yml)
 #   • Team-Abschnitt         – Shortcode "team" in index.qmd
+#   • Footer                 – Shortcode "team inline" in index.qmd
 #   • CITATION.cff           – nach jeder Änderung ausführen:
 #                                Rscript scripts/sync_team.R
 #
