@@ -181,3 +181,103 @@ table { font-size: .95rem; }
 
 // Fokus für Tastaturnutzer:innen sichtbar
 a:focus-visible { outline: 2px solid $srb-accent; outline-offset: 2px; }
+
+// ---------- Handy & kleine Tablets (< 768 px) ----------
+// Closeread legt dort Text über die Grafik. Stattdessen: Grafik fest in den
+// oberen 58 % des Bildschirms, Text scrollt darunter und gleitet hinter die Grafik.
+//
+// Closeread aktiviert einen Schritt, wenn dessen .trigger die Bildschirmmitte
+// erreicht. Mit 38svh Abstand oberhalb der Karte (und 0 unterhalb) wird eine
+// Karte aktiv, sobald ihre Oberkante bei ~88 % ist – die vorige Karte ist dann
+// schon hinter der Grafik verschwunden.
+$srb-mobile-graphic: 58dvh;
+
+@media (max-width: 767.98px) {
+  .cr-section.sidebar-left,
+  .cr-section.sidebar-right,
+  .cr-section.overlay-left,
+  .cr-section.overlay-center,
+  .cr-section.overlay-right {
+    grid-template-columns: 1fr !important;
+
+    .narrative-col {
+      grid-column: 1;
+      z-index: 1;
+      max-width: none;
+      min-width: 0;
+      margin-inline: 0;
+      padding-inline: 14px;
+      background: transparent;
+
+      .trigger {
+        padding-block: 38svh 0;
+        padding-inline: 0;
+      }
+      .trigger:last-child { padding-bottom: 35svh; }
+
+      .narrative {
+        background: $srb-bg-raised;
+        border: 1px solid $srb-line;
+        backdrop-filter: none;
+        padding: .85em 1em;
+        font-size: 1rem;
+        line-height: 1.55;
+        box-shadow: 0 -6px 24px rgba(0, 0, 0, .35);
+      }
+    }
+
+    .sticky-col {
+      grid-column: 1;
+      z-index: 2;              // über dem Text: Karten gleiten darunter
+      pointer-events: none;
+
+      .sticky-col-stack {
+        height: $srb-mobile-graphic;
+        background: $srb-bg;
+        border-bottom: 1px solid $srb-line;
+        pointer-events: auto;
+
+        .sticky {
+          width: 100%;
+          padding: 6px 8px 0;
+          img {
+            display: block;
+            max-height: calc(#{$srb-mobile-graphic} - 10px);
+            max-width: 100%;
+            width: auto;
+            margin: 0 auto;
+            border-radius: 0;
+          }
+        }
+      }
+    }
+  }
+
+  .big-number {
+    padding: 1rem;
+    .value { font-size: clamp(3.5rem, 20vw, 6rem); }
+    .label { font-size: 1.05rem; }
+  }
+
+  #title-block-header { padding: 12svh 1rem 7svh; }
+
+  .chapter {
+    margin: 10svh auto 2svh;
+    h2 { font-size: 1.65rem; }
+  }
+
+  .prose { padding: 0 1rem 3rem; }
+
+  // Tabellen notfalls horizontal scrollbar statt abgeschnitten
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    font-size: .88rem;
+  }
+}
+
+// Lange URLs/Code dürfen umbrechen – sonst wird die Seite auf dem Handy breiter
+// als der Bildschirm und der Browser zoomt alles heraus.
+p code, li code, td code { white-space: normal; overflow-wrap: anywhere; }
+.prose a, .narrative a { overflow-wrap: anywhere; }
+.prose { min-width: 0; }
