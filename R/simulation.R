@@ -103,7 +103,7 @@ plot_comparison <- function(s) {
     geom_text(aes(label = fmt_pct(share)), hjust = -0.15, size = 5.2, fontface = "bold") +
     scale_fill_manual(values = c(`TRUE` = srb_col[["grey"]], `FALSE` = srb_col[["pos"]]),
                       guide = "none") +
-    scale_x_continuous(labels = \(x) fmt_pct(x), limits = c(0, 1.08),
+    scale_x_continuous(labels = \(x) fmt_pct(x), limits = c(0, 1.14),
                        breaks = seq(0, 1, 0.25), expand = c(0, 0)) +
     labs(x = "Anteil zufrieden bzw. positiv", y = NULL,
          title = "Dieselben Spieler:innen – drei verschiedene Zahlen",
