@@ -61,7 +61,7 @@ Das Problem: Bei echten Spielen sehen wir nur die Reviews – nie die stille Meh
 
 ::: {#cr-sim-all}
 ```{r}
-#| label: fig-sim-all
+#| label: sim-all-plot
 #| fig-width: 6
 #| fig-height: 6.4
 #| fig-alt: !expr 'sprintf("Punktewolke mit %d Punkten in einem 20-mal-20-Raster. %d blaue Punkte stehen für zufriedene, %d orange Punkte für unzufriedene Spieler:innen.", sim$n, sim$n_happy, sim$n - sim$n_happy)'
@@ -71,7 +71,7 @@ plot_population(sim)
 
 ::: {#cr-sim-reviewers}
 ```{r}
-#| label: fig-sim-reviewers
+#| label: sim-reviewers-plot
 #| fig-width: 6
 #| fig-height: 6.4
 #| fig-alt: !expr 'sprintf("Dieselbe Punktewolke, aber nur %d Punkte sind hervorgehoben: die Reviewer. Davon sind %d blau (zufrieden) und %d orange (unzufrieden), obwohl in der ganzen Wolke Blau deutlich überwiegt.", sim$n_reviewers, sim$n_rev_happy, sim$n_reviewers - sim$n_rev_happy)'
@@ -81,7 +81,7 @@ plot_population(sim, highlight_reviewers = TRUE)
 
 ::: {#cr-sim-compare}
 ```{r}
-#| label: fig-sim-compare
+#| label: sim-compare-plot
 #| fig-width: 7
 #| fig-height: 4.2
 #| fig-alt: !expr 'sprintf("Balkendiagramm: Wahrer Anteil Zufriedener %s. Anteil positiver Reviews, wenn Unzufriedene öfter schreiben: %s. Wenn Zufriedene öfter schreiben: %s.", fmt_pct(sim$share_true), fmt_pct(sim$share_A), fmt_pct(sim$share_B))'
