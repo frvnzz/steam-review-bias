@@ -167,7 +167,7 @@ plot_daily_share <- function(daily, which_game, shade = NULL) {
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
     labs(x = NULL, y = "Anteil positiv (heutiger Stand)",
          title = paste0(which_game, ": Anteil positiver Reviews pro Tag"),
-         subtitle = "Reviews nach Erstellungstag gruppiert – bewertet so, wie sie heute dastehen")
+         subtitle = "Reviews nach Erstellungstag gruppiert, bewertet so, wie sie heute dastehen")
   add_shade(p, shade)
 }
 
@@ -186,7 +186,7 @@ plot_offtopic <- function(daily, which_game) {
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
     labs(x = NULL, y = "negative Reviews pro Tag",
          title = paste0(which_game, ": Was Steam ausblendet"),
-         subtitle = "Negative Reviews pro Tag – mit und ohne Steams Off-Topic-Filter") +
+         subtitle = "Negative Reviews pro Tag, mit und ohne Steams Off-Topic-Filter") +
     theme(legend.direction = "vertical")
 }
 

@@ -106,7 +106,7 @@ plot_comparison <- function(s) {
     scale_x_continuous(labels = \(x) fmt_pct(x), limits = c(0, 1.14),
                        breaks = seq(0, 1, 0.25), expand = c(0, 0)) +
     labs(x = "Anteil zufrieden bzw. positiv", y = NULL,
-         title = "Dieselben Spieler:innen – drei verschiedene Zahlen",
+         title = "Dieselben Spieler:innen, drei verschiedene Zahlen",
          subtitle = "Die gestrichelte Linie ist der wahre Anteil Zufriedener") +
     theme(panel.grid.major.y = element_blank(),
           axis.text.y = element_text(colour = srb_col[["text"]], size = 11, hjust = 0))
