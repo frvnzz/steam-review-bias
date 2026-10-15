@@ -1,0 +1,24 @@
+<!-- Lenis-Smooth-Scrolling (lokal eingebunden, kein CDN: js/vendor/lenis/, MIT-Lizenz).
+     Lenis bewegt die echte Scrollposition, daher funktionieren position: sticky und
+     die Closeread-Trigger unverändert. Bei „Bewegung reduzieren“ bleibt natives Scrollen. -->
+<link rel="stylesheet" href="js/vendor/lenis/lenis.css">
+<script src="js/vendor/lenis/lenis.min.js"></script>
+<script>
+(function () {
+  if (typeof Lenis === "undefined") return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  window.lenis = new Lenis({
+    lerp: 0.1,        // wie stark nachgeglättet wird (kleiner = weicher, träger)
+    anchors: true,    // Sprungmarken (#…) ebenfalls weich ansteuern
+    autoRaf: true
+  });
+  // Closeread springt mit ← / → per scrollIntoView zum nächsten Schritt. Gleitet
+  // Lenis in dem Moment noch nach, würde es diesen Sprung überschreiben. Daher
+  // das Nachgleiten vorher an der aktuellen Position beenden.
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      window.lenis.scrollTo(window.scrollY, { immediate: true, force: true });
+    }
+  }, true);
+})();
+</script>

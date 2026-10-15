@@ -3,6 +3,8 @@ project:
   output-dir: _site
   render:
     - index.qmd
+  resources:
+    - js/vendor/lenis/
 
 execute:
   freeze: auto   # Ergebnisse in _freeze/ – CI braucht dadurch kein R
@@ -23,7 +25,8 @@ format:
   closeread-html:
     theme: [darkly, styles/steam.scss]
     toc: false
-    smooth-scroll: true
+    smooth-scroll: false   # Lenis übernimmt (js/smooth-scroll.html)
+    include-after-body: js/smooth-scroll.html
     fig-dpi: 200
     fig-width: 7
     fig-height: 4.5
