@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "Wenn ihr dieses Projekt zitiert, nutzt bitte diese Angaben."
+title: "Wer schreibt Reviews – und warum verzerrt das? Selektionsbias in Steam-User-Reviews"
+type: software
+authors:
+  - given-names: "[Vorname 1]"
+    family-names: "[Nachname 1]"
+  - given-names: "[Vorname 2]"
+    family-names: "[Nachname 2]"
+  - given-names: "[Vorname 3]"
+    family-names: "[Nachname 3]"
+repository-code: "https://github.com/frvnzz/steam-review-bias"
+url: "https://frvnzz.github.io/steam-review-bias/"
+keywords:
+  - statistics
+  - selection bias
+  - Steam
+  - scrollytelling
+  - Quarto
