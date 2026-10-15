@@ -83,7 +83,7 @@ plot_playtime_hist <- function(reviews, which_game) {
     labs(x = "Spielzeit beim Schreiben der Review (logarithmische Achse)",
          y = "Anzahl Reviews",
          title = paste0(which_game, ": Wie lange wurde vor der Review gespielt?"),
-         subtitle = "Jeder Balken deckt einen gleich breiten Bereich auf der Log-Skala ab")
+         subtitle = "Jeder Balken umfasst einen gleich breiten Bereich auf der logarithmischen Achse")
 }
 
 plot_share_by_playtime <- function(reviews) {
@@ -138,8 +138,8 @@ plot_reviewer_share <- function(reviews) {
     facet_wrap(~game, ncol = 1, scales = "free_y") +
     scale_y_continuous(labels = \(x) fmt_pct(x)) +
     labs(x = "Reviews, die die Person insgesamt geschrieben hat", y = "Anteil positiv",
-         title = "Viel-Reviewer sind strenger",
-         subtitle = "Anteil positiver Reviews · Striche: 95-%-Unsicherheitsintervall · y-Achse je Spiel eigen",
+         title = "Viel-Reviewer bewerten seltener positiv",
+         subtitle = "Anteil positiver Reviews · Striche: 95-%-Unsicherheitsintervall · y-Achse je Spiel unterschiedlich",
          caption = "Gruppen mit weniger als 30 Reviews ausgeblendet")
 }
 
@@ -151,9 +151,9 @@ plot_daily_volume <- function(daily, which_game, shade = NULL) {
     geom_col(fill = srb_col[["accent"]], width = 1, alpha = 0.9) +
     scale_y_continuous(labels = \(x) fmt_num(x)) +
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
-    labs(x = NULL, y = "neue Reviews pro Tag",
+    labs(x = NULL, y = "Neue Reviews pro Tag",
          title = paste0(which_game, ": Reviews pro Tag"),
-         subtitle = "Nach Erstellungsdatum (UTC)")
+         subtitle = "Nach Tag der Erstellung (UTC)")
   add_shade(p, shade)
 }
 
@@ -167,7 +167,7 @@ plot_daily_share <- function(daily, which_game, shade = NULL) {
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
     labs(x = NULL, y = "Anteil positiv (heutiger Stand)",
          title = paste0(which_game, ": Anteil positiver Reviews pro Tag"),
-         subtitle = "Reviews nach Erstellungstag gruppiert, bewertet so, wie sie heute dastehen")
+         subtitle = "Nach Tag der Erstellung (UTC) · positiv oder negativ nach heutigem Stand")
   add_shade(p, shade)
 }
 
@@ -175,16 +175,16 @@ plot_offtopic <- function(daily, which_game) {
   d <- daily |>
     filter(game == which_game) |>
     mutate(n_negative = n_total - n_positive,
-           variant = if_else(filter_offtopic, "Standard: Off-Topic herausgefiltert",
-                             "Alle Reviews (filter_offtopic_activity = false)"))
+           variant = if_else(filter_offtopic, "Standardansicht: Off-Topic-Phasen ausgeblendet",
+                             "Ohne Filter: alle Reviews"))
   ggplot(d, aes(date, n_negative, colour = variant)) +
     geom_line(linewidth = 0.8) +
     scale_colour_manual(values = c(srb_col[["neg"]], srb_col[["muted"]]),
-                        breaks = c("Alle Reviews (filter_offtopic_activity = false)",
-                                   "Standard: Off-Topic herausgefiltert")) +
+                        breaks = c("Ohne Filter: alle Reviews",
+                                   "Standardansicht: Off-Topic-Phasen ausgeblendet")) +
     scale_y_continuous(labels = \(x) fmt_num(x)) +
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
-    labs(x = NULL, y = "negative Reviews pro Tag",
+    labs(x = NULL, y = "Negative Reviews pro Tag",
          title = paste0(which_game, ": Was Steam ausblendet"),
          subtitle = "Negative Reviews pro Tag, mit und ohne Steams Off-Topic-Filter") +
     theme(legend.direction = "vertical")
@@ -198,7 +198,7 @@ factor_table <- function(reviews) {
     "Nicht auf Steam gekauft"    = !reviews$steam_purchase,
     "Als „geschenkt“ markiert"   = reviews$received_for_free,
     "Später zurückgegeben"       = reviews$refunded,
-    "Meist auf Steam Deck"       = reviews$primarily_steam_deck
+    "Meist auf dem Steam Deck"   = reviews$primarily_steam_deck
   )
   bind_rows(lapply(names(groups), function(g) {
     reviews[groups[[g]], ] |> share_by(game) |> mutate(group = g)
@@ -248,7 +248,7 @@ plot_languages <- function(reviews, top = 6) {
     scale_x_continuous(labels = \(x) fmt_pct(x)) +
     labs(x = "Anteil positiv", y = NULL,
          title = "Je nach Sprache ein anderes Bild",
-         subtitle = "Häufigste Review-Sprachen · 95-%-Unsicherheitsintervall") +
+         subtitle = paste0("Die ", top, " häufigsten Sprachen · Striche: 95-%-Unsicherheitsintervall")) +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
 }
 
