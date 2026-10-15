@@ -1,0 +1,174 @@
+---
+title: "Fast alle positiv – aber von wem?"
+subtitle: "Wer auf Steam Reviews schreibt – und warum die Prozentzahl deshalb nicht für alle Spieler:innen spricht"
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("R/theme.R")
+source("scripts/sync_authors.R")
+team <- check_authors()   # bricht ab, wenn CITATION.cff und _quarto.yml auseinanderlaufen
+```
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Kapitel 1]{.chapter-kicker}
+
+## Der Hook
+:::
+
+:::: {.cr-section}
+
+Eine Zahl wie diese kennst du vom Store: Fast alle Reviews sind positiv. @cr-hook
+
+Aber diese Zahl beantwortet nur eine Frage: *Wie urteilen die Menschen, die eine Review geschrieben haben?* @cr-hook
+
+Wie viele Spieler:innen das insgesamt sind – und ob sie typisch sind –, steht nirgends. @cr-hook
+
+::: {#cr-hook}
+[[XX %]{.value}[positiv (Platzhalter)]{.label}]{.big-number}
+:::
+
+::::
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Kapitel 2]{.chapter-kicker}
+
+## Selektionsbias in 60 Sekunden
+:::
+
+:::: {.cr-section}
+
+Platzhalter: Punktewolke aller Spieler:innen. @cr-selection
+
+Platzhalter: Nur ein kleiner, besonderer Teil schreibt eine Review. @cr-selection
+
+::: {#cr-selection}
+::: {.placeholder-card}
+Grafik folgt: Simulation mit bekannter „Wahrheit“
+:::
+:::
+
+::::
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Kapitel 3]{.chapter-kicker}
+
+## Wann wird bewertet? Spielzeit bei Review-Abgabe
+:::
+
+:::: {.cr-section}
+
+Platzhalter: schiefe Verteilung, Median vs. Mittelwert. @cr-playtime
+
+::: {#cr-playtime}
+::: {.placeholder-card}
+Grafik folgt: Verteilung von `playtime_at_review`
+:::
+:::
+
+::::
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Kapitel 4]{.chapter-kicker}
+
+## Wer sind die Reviewer?
+:::
+
+:::: {.cr-section}
+
+Platzhalter: Viel-Reviewer vs. Einmal-Reviewer. @cr-reviewers
+
+::: {#cr-reviewers}
+::: {.placeholder-card}
+Grafik folgt: `num_reviews` der Autor:innen
+:::
+:::
+
+::::
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Kapitel 5]{.chapter-kicker}
+
+## Review-Bombing: Wenn plötzlich alle schreiben
+:::
+
+:::: {.cr-section}
+
+Platzhalter: täglicher Anteil positiver Reviews als Zeitreihe. @cr-bombing
+
+::: {#cr-bombing}
+::: {.placeholder-card}
+Grafik folgt: Zeitreihe & Off-Topic-Filter
+:::
+:::
+
+::::
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Kapitel 6]{.chapter-kicker}
+
+## Weitere Filter: geschenkt, Early Access, Sprache
+:::
+
+:::: {.cr-section}
+
+Platzhalter: Anteil positiv nach Gruppe. @cr-factors
+
+::: {#cr-factors}
+::: {.placeholder-card}
+Grafik folgt: Vergleich der Teilgruppen
+:::
+:::
+
+::::
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Kapitel 7]{.chapter-kicker}
+
+## Was heißt das für dich?
+:::
+
+::: {.prose}
+Platzhalter: Takeaways für das Lesen von Bewertungen.
+:::
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Kapitel 8]{.chapter-kicker}
+
+## Grenzen dieser Analyse
+:::
+
+::: {.prose}
+Platzhalter: Wir sehen nie, was die Nicht-Reviewer denken.
+:::
+
+<!-- ===================================================================== -->
+::: {.chapter}
+[Anhang]{.chapter-kicker}
+
+## Methodik, Daten & Team
+:::
+
+::: {.prose}
+### Datenquelle
+
+Platzhalter: Steamworks-Doku `IUserReviewsService/GetAppReviews`, Abrufdatum.
+
+### Team
+
+```{r}
+#| results: asis
+cat("<ul class='team-list'>", paste0("<li>", team, "</li>", collapse = ""), "</ul>", sep = "")
+```
+
+Quellcode: <https://github.com/frvnzz/steam-review-bias>
+:::

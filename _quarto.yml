@@ -1,0 +1,43 @@
+project:
+  type: default
+  output-dir: _site
+  render:
+    - index.qmd
+
+execute:
+  freeze: auto   # Ergebnisse in _freeze/ – CI braucht dadurch kein R
+  echo: false
+  warning: false
+  message: false
+
+lang: de
+
+# >>> authors – wird aus CITATION.cff erzeugt: Rscript scripts/sync_authors.R --fix
+author:
+  - name: "[Vorname 1] [Nachname 1]"
+  - name: "[Vorname 2] [Nachname 2]"
+  - name: "[Vorname 3] [Nachname 3]"
+# <<< authors
+
+format:
+  closeread-html:
+    theme: [darkly, styles/steam.scss]
+    toc: false
+    smooth-scroll: true
+    fig-dpi: 200
+    fig-width: 7
+    fig-height: 4.5
+    fig-align: center
+    lightbox: false
+    cr-section:
+      layout: sidebar-left
+    cr-style:
+      section-background-color: "#131a24"
+      narrative-background-color-sidebar: "#131a24"
+      narrative-background-color-overlay: "rgba(23, 33, 48, 0.92)"
+      narrative-text-color-sidebar: "#dce6ef"
+      narrative-text-color-overlay: "#dce6ef"
+      narrative-font-size: "1.08rem"
+      narrative-border-radius: "12px"
+      narrative-sidebar-width: "minmax(320px, 1fr)"
+      narrative-overlay-max-width: "520px"

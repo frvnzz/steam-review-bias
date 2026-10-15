@@ -1,0 +1,172 @@
+/*-- scss:defaults --*/
+
+// Farbwelt angelehnt an Steam (dunkles Blau + helles Akzentblau) – ohne Marken-Assets.
+$srb-bg:        #131a24;
+$srb-bg-raised: #1b2838;
+$srb-panel:     #22344a;
+$srb-line:      #2f4560;
+$srb-text:      #dce6ef;
+$srb-muted:     #93a7bb;
+$srb-accent:    #66c0f4;
+$srb-pos:       #56b4e9;   // Okabe-Ito „sky blue“  → positiv
+$srb-neg:       #e69f00;   // Okabe-Ito „orange“    → negativ
+
+$body-bg:    $srb-bg;
+$body-color: $srb-text;
+$link-color: $srb-accent;
+$primary:    $srb-accent;
+$border-color: $srb-line;
+
+// System-Schriften: kein Nachladen von Drittanbietern (DSGVO-freundlich)
+$font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-family-monospace:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+$headings-font-weight: 750;
+$line-height-base: 1.6;
+
+/*-- scss:rules --*/
+
+:root {
+  --srb-accent: #{$srb-accent};
+  --srb-pos: #{$srb-pos};
+  --srb-neg: #{$srb-neg};
+  --srb-muted: #{$srb-muted};
+}
+
+body { background: $srb-bg; }
+
+// ---------- Titelblock ----------
+#title-block-header {
+  grid-column: screen-start / screen-end;   // volle Breite statt Textspalte
+  margin-block: 0 !important;
+  padding: 18svh 1.25rem 10svh;
+  text-align: center;
+  background:
+    radial-gradient(1200px 500px at 50% -10%, rgba(102, 192, 244, .22), transparent 70%),
+    linear-gradient(180deg, $srb-bg-raised 0%, $srb-bg 100%);
+  border-bottom: 1px solid $srb-line;
+
+  .title {
+    font-size: clamp(2.2rem, 6vw, 4.2rem);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  .subtitle {
+    color: $srb-muted;
+    font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+    margin-top: .75rem;
+  }
+  .quarto-title-meta {
+    display: flex !important;   // Quarto setzt hier ein 2-spaltiges Grid
+    justify-content: center;
+    text-align: center;
+    color: $srb-muted;
+    margin-top: 2rem;
+  }
+  .quarto-title-meta-contents p { margin-bottom: .15rem; white-space: nowrap; }
+  .quarto-title-meta-heading { color: $srb-accent; text-transform: uppercase; font-size: .75rem; letter-spacing: .12em; }
+}
+
+// ---------- Kapitelüberschriften zwischen Closeread-Sektionen ----------
+.chapter {
+  max-width: 760px;
+  margin: 18svh auto 4svh;
+  padding: 0 1.25rem;
+
+  .chapter-kicker {
+    display: inline-block;
+    color: $srb-accent;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    margin-bottom: .5rem;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 4vw, 2.6rem);
+    letter-spacing: -0.015em;
+    border: none;
+    margin-top: 0;
+  }
+  p { color: $srb-text; font-size: 1.1rem; }
+}
+
+// ---------- Erzähltext (Closeread) ----------
+.cr-section .narrative-col .narrative {
+  background: rgba(34, 52, 74, .55);
+  border: 1px solid $srb-line;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+  backdrop-filter: blur(6px);
+  line-height: 1.6;
+
+  strong { color: #fff; }
+}
+
+// Sticky-Grafiken
+.cr-section .sticky-col .sticky {
+  img { max-height: 88dvh; width: auto; max-width: 100%; border-radius: 10px; }
+}
+
+// Große Kennzahl als Sticky-Element (Hook usw.)
+.big-number {
+  text-align: center;
+  padding: 2rem;
+
+  .value {
+    display: block;
+    font-size: clamp(4.5rem, 16vw, 11rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: $srb-pos;
+  }
+  .label {
+    display: block;
+    margin-top: 1rem;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    color: $srb-muted;
+  }
+}
+
+.placeholder-card {
+  box-sizing: border-box;
+  max-width: min(34rem, 100%);
+  padding: 2.5rem;
+  border: 2px dashed $srb-line;
+  border-radius: 16px;
+  color: $srb-muted;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+// Farbig hervorgehobene Wörter im Text (passen zu den Plot-Farben)
+.pos { color: $srb-pos; font-weight: 700; }
+.neg { color: $srb-neg; font-weight: 700; }
+
+// ---------- Fließtext-Abschnitte (Methodik, Quellen, Team) ----------
+.prose {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 1.25rem 4rem;
+}
+
+.callout { border-radius: 10px; }
+
+.team-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+
+  li {
+    background: $srb-panel;
+    border: 1px solid $srb-line;
+    border-radius: 999px;
+    padding: .4rem 1rem;
+  }
+}
+
+table { font-size: .95rem; }
+
+// Fokus für Tastaturnutzer:innen sichtbar
+a:focus-visible { outline: 2px solid $srb-accent; outline-offset: 2px; }
