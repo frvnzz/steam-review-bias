@@ -75,7 +75,7 @@ plot_population <- function(s, highlight_reviewers = FALSE) {
     coord_equal(clip = "off") +
     theme_void(base_size = 13) +
     theme(
-      plot.background = element_rect(fill = srb_col[["bg"]], colour = NA),
+      plot.background = element_rect(fill = "transparent", colour = NA),
       legend.position = "top",
       legend.text = element_text(colour = srb_col[["text"]], size = 12),
       legend.title = element_blank(),

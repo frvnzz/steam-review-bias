@@ -35,12 +35,14 @@ format:
     cr-section:
       layout: sidebar-left
     cr-style:
-      section-background-color: "#131a24"
-      narrative-background-color-sidebar: "#131a24"
+      # transparent: Closeread/Quarto setzen opacity: .999 auf die Sektionen; eine
+      # eigene Hintergrundfarbe wird dadurch einen Tick dunkler gerendert (sichtbare Kante)
+      section-background-color: "transparent"
+      narrative-background-color-sidebar: "transparent"
       narrative-background-color-overlay: "rgba(23, 33, 48, 0.92)"
       narrative-text-color-sidebar: "#dce6ef"
       narrative-text-color-overlay: "#dce6ef"
       narrative-font-size: "1.08rem"
       narrative-border-radius: "12px"
-      narrative-sidebar-width: "minmax(320px, 1fr)"
+      narrative-sidebar-width: "minmax(360px, 1.2fr)"
       narrative-overlay-max-width: "520px"

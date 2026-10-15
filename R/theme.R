@@ -20,8 +20,8 @@ srb_col <- c(
 theme_srb <- function(base_size = 13) {
   theme_minimal(base_size = base_size) %+replace%
     theme(
-      plot.background   = element_rect(fill = srb_col[["bg"]], colour = NA),
-      panel.background  = element_rect(fill = srb_col[["bg"]], colour = NA),
+      plot.background   = element_rect(fill = "transparent", colour = NA),
+      panel.background  = element_rect(fill = "transparent", colour = NA),
       panel.grid.major  = element_line(colour = srb_col[["grid"]], linewidth = 0.35),
       panel.grid.minor  = element_blank(),
       text              = element_text(colour = srb_col[["text"]]),
@@ -62,7 +62,9 @@ fmt_pct <- function(x, digits = 0) paste0(fmt_num(100 * x, digits), "\u00a0%")
 theme_set(theme_srb())
 update_geom_defaults("text", list(colour = srb_col[["text"]]))
 
-# Grafik-Device mit Seitenhintergrund statt Weiß (sonst weiße Ränder im PNG)
+# Transparente PNGs statt Weiß: Der Seitenhintergrund scheint durch. Eine fest
+# eingebrannte Hintergrundfarbe rendert der Browser einen Tick anders als die
+# CSS-Farbe – der Bildrand wäre dann als Kante sichtbar.
 if (requireNamespace("knitr", quietly = TRUE)) {
-  knitr::opts_chunk$set(dev.args = list(bg = srb_col[["bg"]]))
+  knitr::opts_chunk$set(dev.args = list(bg = "transparent"))
 }
