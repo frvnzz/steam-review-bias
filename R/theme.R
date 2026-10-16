@@ -30,7 +30,7 @@ theme_srb <- function(base_size = 13) {
       text              = element_text(colour = srb_col[["text"]]),
       axis.text         = element_text(colour = srb_col[["muted"]], size = rel(0.85)),
       axis.title        = element_text(colour = srb_col[["muted"]], size = rel(0.9)),
-      plot.title        = element_text(face = "bold", size = rel(1.3), hjust = 0,
+      plot.title        = element_text(face = "bold", size = rel(1.2), hjust = 0,
                                        margin = margin(b = 4)),
       plot.subtitle     = element_text(colour = srb_col[["muted"]], hjust = 0,
                                        margin = margin(b = 12)),
@@ -42,7 +42,8 @@ theme_srb <- function(base_size = 13) {
       legend.justification = "left",
       legend.text       = element_text(colour = srb_col[["text"]]),
       legend.title      = element_blank(),
-      strip.text        = element_text(colour = srb_col[["text"]], face = "bold",
+      # Facettentitel linksbündig wie Zwischenüberschriften, nicht zentriert
+      strip.text        = element_text(colour = srb_col[["text"]], face = "bold", hjust = 0,
                                        margin = margin(b = 6)),
       plot.margin       = margin(16, 20, 12, 16)
     )

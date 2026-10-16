@@ -6,11 +6,10 @@ $srb-bg-raised: #1b2838;
 $srb-panel:     #22344a;
 $srb-line:      #2f4560;
 $srb-text:      #dce6ef;
-$srb-muted:     #93a7bb;
+$srb-muted:     #93a7bb;   // auf $srb-bg ca. 7:1 – auch für kleine Beschriftungen
 $srb-accent:    #66c0f4;
 $srb-pos:       #2f8fcc;   // positiv (Okabe-Ito-Blau, abgedunkelt; validiert)
 $srb-neg:       #c77f00;   // negativ (Okabe-Ito-Orange, abgedunkelt; validiert)
-$srb-radius:    12px;      // einheitlicher Eckenradius für Karten, Callouts, Eisberg
 
 $body-bg:    $srb-bg;
 $body-color: $srb-text;
@@ -18,13 +17,40 @@ $link-color: $srb-accent;
 $primary:    $srb-accent;
 $border-color: $srb-line;
 
-// System-Schriften: kein Nachladen von Drittanbietern (DSGVO-freundlich)
-$font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+// Darkly lädt sonst „Lato“ von Google Fonts nach (DSGVO) – wir liefern eigene Schriften aus
+$web-font-path: false;
+
+// Lesetext in einer Serifenschrift (selbst gehostet, fonts/, SIL OFL 1.1),
+// Beschriftungen, Zahlen in Tabellen und Footer in Helvetica/Arial – wie im Zeitungsgrafik-Ressort
+$srb-serif: "Source Serif 4", Charter, "Sitka Text", Cambria, Georgia, serif;
+$srb-sans:  "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-family-sans-serif: $srb-sans;
+$font-family-base: $srb-serif;   // Closeread übernimmt das über --bs-body-font-family
 $font-family-monospace:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-$headings-font-weight: 750;
+$headings-font-family: $srb-serif;
+$headings-font-weight: 600;
 $line-height-base: 1.6;
+$srb-col: 42rem;   // eine Textspalte für Titel, Kapitel, Prosa, Footer
+$srb-radius: 2px;  // kaum sichtbar: Flächen sollen nicht wie App-Kacheln wirken
 
 /*-- scss:rules --*/
+
+// Source Serif 4 (Adobe, SIL OFL 1.1, fonts/OFL.txt). Pfad relativ zum Projektordner:
+// Quarto kopiert die Dateien beim Rendern neben die kompilierte CSS
+// (index_files/libs/bootstrap/fonts/). swap: Text erscheint sofort in der Ersatzschrift.
+@each $file, $weight, $style in (
+  "Regular" 400 normal, "It" 400 italic,
+  "Semibold" 600 normal, "SemiboldIt" 600 italic,
+  "Bold" 700 normal, "BoldIt" 700 italic
+) {
+  @font-face {
+    font-family: "Source Serif 4";
+    src: url("fonts/SourceSerif4-#{$file}.ttf.woff2") format("woff2");
+    font-weight: $weight;
+    font-style: $style;
+    font-display: swap;
+  }
+}
 
 :root {
   --srb-accent: #{$srb-accent};
@@ -35,40 +61,65 @@ $line-height-base: 1.6;
 
 body { background: $srb-bg; }
 
+// Beschriftungen in Grotesk, damit sie sich vom Lesetext abheben
+.chapter-kicker,
+.quarto-title-meta,
+.iceberg .berg-kicker,
+.iceberg .label,
+.big-number .label,
+.fig-head,
+.fig-caption,
+.prose table,
+.sample-cards,
+.callout-header,
+.site-footer { font-family: $srb-sans; }
+
 // ---------- Titelblock ----------
-// Quarto gibt dem Inhaltsbereich oben 1em Abstand; ohne den beginnt der
-// Titel-Farbverlauf direkt am oberen Rand (sonst dünner dunkler Streifen).
+// Quarto gibt dem Inhaltsbereich oben 1em Abstand – hier nicht nötig.
 main#quarto-document-content { margin-top: 0; }
 
+// Volle Breite, aber der Text beginnt an derselben Kante wie Kapitel und Fließtext
+// (Seitenrand = halber Rest neben der Textspalte + deren Innenabstand)
 #title-block-header {
-  grid-column: screen-start / screen-end;   // volle Breite statt Textspalte
+  grid-column: screen-start / screen-end;
   margin-block: 0 !important;
-  padding: 18svh 1.25rem 10svh;
-  text-align: center;
-  background:
-    radial-gradient(1200px 500px at 50% -10%, rgba(102, 192, 244, .22), transparent 70%),
-    linear-gradient(180deg, $srb-bg-raised 0%, $srb-bg 100%);
-  border-bottom: 1px solid $srb-line;
+  padding: 14svh max(1.25rem, calc((100% - #{$srb-col}) / 2 + 1.25rem)) 3rem;
+  text-align: left;
+  background: none;
+  border-bottom: 0;
 
   .title {
-    font-size: clamp(2.2rem, 6vw, 4.2rem);
-    letter-spacing: -0.02em;
-    line-height: 1.05;
+    font-size: clamp(2.1rem, 5vw, 3.3rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    text-wrap: balance;
   }
   .subtitle {
     color: $srb-muted;
-    font-size: clamp(1.05rem, 2.2vw, 1.35rem);
-    margin-top: .75rem;
+    font-size: clamp(1.1rem, 2vw, 1.3rem);
+    line-height: 1.45;
+    margin-top: .9rem;
+    max-width: 36em;
   }
   .quarto-title-meta {
-    display: flex !important;   // Quarto setzt hier ein 2-spaltiges Grid
-    justify-content: center;
-    text-align: center;
-    color: $srb-muted;
-    margin-top: 2rem;
+    display: block !important;   // Quarto setzt hier ein 2-spaltiges Grid
+    text-align: left;
+    margin-top: 1.75rem;
+    color: $srb-text;
+    font-size: .95rem;
   }
   .quarto-title-meta-contents p { margin-bottom: .15rem; white-space: nowrap; }
-  .quarto-title-meta-heading { color: $srb-accent; text-transform: uppercase; font-size: .75rem; letter-spacing: .12em; }
+  // .quarto-title-block.default: Quartos eigene Regel (Versalien, 80 %) ist sonst spezifischer
+  &.quarto-title-block.default .quarto-title-meta-heading {
+    color: $srb-muted;
+    opacity: 1;   // Quarto dimmt auf 80 % – das kostet Kontrast
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: .95rem;
+    font-weight: 400;
+    margin: 0 0 .15rem;
+  }
 }
 
 // ---------- Kapitelüberschriften zwischen Closeread-Sektionen ----------
@@ -76,22 +127,30 @@ main#quarto-document-content { margin-top: 0; }
 // Block sonst auf seinen Inhalt schrumpfen und jede Überschrift woanders beginnen.
 .chapter {
   justify-self: center;
-  width: min(760px, 100%);
+  width: min(#{$srb-col}, 100%);
   margin: clamp(4rem, 12svh, 8rem) 0 0;
   padding: 0 1.25rem;
 
+  // Pandoc packt die Kennzeile in ein eigenes <p>: dessen Abstand nach unten
+  // würde sie von der Überschrift lösen
+  > p:has(> .chapter-kicker) { margin-bottom: 0; }
+
   .chapter-kicker {
-    display: inline-block;
-    color: $srb-accent;
-    font-size: .8rem;
-    font-weight: 700;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    margin-bottom: .5rem;
+    display: block;
+    color: $srb-muted;
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-bottom: .3rem;
+    font-variant-numeric: tabular-nums;
   }
   h2 {
-    font-size: clamp(1.7rem, 4vw, 2.6rem);
-    letter-spacing: -0.015em;
+    font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-wrap: balance;
     border: none;
     margin-top: 0;
   }
@@ -112,20 +171,21 @@ main#quarto-document-content { margin-top: 0; }
   }
 }
 
+// Schlichte, deckende Fläche: kein Glas, kein Schatten, kein Rahmen
 .cr-section .narrative-col .narrative {
   border-radius: $srb-radius;
-  background: rgba(34, 52, 74, .55);
-  border: 1px solid $srb-line;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
-  backdrop-filter: blur(6px);
+  background: $srb-bg-raised;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
   line-height: 1.6;
 
-  strong { color: #fff; }
+  strong { color: inherit; font-weight: 600; }
 }
 
 // Sticky-Grafiken
 .cr-section .sticky-col .sticky {
-  img { max-height: 88dvh; width: auto; max-width: 100%; border-radius: $srb-radius; }
+  img { max-height: 88dvh; width: auto; max-width: 100%; }
 }
 
 // Große Kennzahl als Sticky-Element (Hook usw.)
@@ -135,25 +195,18 @@ main#quarto-document-content { margin-top: 0; }
 
   .value {
     display: block;
-    font-size: clamp(4.5rem, 16vw, 11rem);
-    font-weight: 800;
+    font-family: $srb-serif;
+    font-size: clamp(4rem, 13vw, 9rem);
+    font-weight: 600;
+    font-variant-numeric: lining-nums;
     line-height: 1;
-    letter-spacing: -0.04em;
-    color: #fff;
-  }
-  .value::after {   // Farbbalken trägt die Bedeutung, nicht die Schrift
-    content: "";
-    display: block;
-    width: 4.5rem;
-    height: 6px;
-    margin: 1.25rem auto 0;
-    border-radius: 3px;
-    background: $srb-pos;
+    letter-spacing: -0.01em;
+    color: $srb-text;
   }
   .label {
     display: block;
     margin-top: 1rem;
-    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    font-size: clamp(1.05rem, 2vw, 1.35rem);
     color: $srb-muted;
   }
 }
@@ -168,14 +221,14 @@ main#quarto-document-content { margin-top: 0; }
 
   .berg-kicker {
     display: block;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: $srb-accent;
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $srb-muted;
     margin-bottom: .35rem;
   }
-  .value { display: block; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: #fff; }
+  .value { display: block; font-family: $srb-serif; font-weight: 600; line-height: 1; letter-spacing: -0.01em; color: $srb-text; }
   .label { display: block; margin-top: .4rem; color: $srb-muted; }
 
   .berg-tip {
@@ -190,33 +243,65 @@ main#quarto-document-content { margin-top: 0; }
     .label { font-size: .95rem; }
   }
 
+  // Gestrichelter Rand und Wasserlinie tragen die Aussage, die Fläche nur einen Hauch Farbe
   .berg-hidden {
     padding: 1.6rem 1.25rem 2.4rem;
     border: 2px dashed $srb-line;
     border-top: 4px solid $srb-pos;   // Wasserlinie
     border-radius: 0 0 45% 45% / 0 0 22% 22%;
-    background: linear-gradient(180deg, rgba(47, 143, 204, .14), rgba(47, 143, 204, .03));
+    background: rgba(47, 143, 204, .07);
     .value { font-size: clamp(4.5rem, 12vw, 8.5rem); }
     .label { font-size: clamp(1.05rem, 2vw, 1.35rem); }
-    .note { display: block; margin: .9rem auto 0; max-width: 20rem; font-size: .85rem; color: $srb-muted; }
+    .note { display: block; margin: .9rem auto 0; max-width: 20rem; font-family: $srb-sans; font-size: .85rem; color: $srb-muted; }
   }
 }
 
 // Hervorgehobene Wörter im Text: Schrift bleibt Textfarbe, die Unterstreichung
-// trägt die Plot-Farbe (Text nie in Serienfarbe – Lesbarkeit).
-.pos, .neg { font-weight: 700; color: #fff; text-decoration: underline 3px; text-underline-offset: 4px; }
+// trägt die Plot-Farbe und dient so als Legende (Text nie in Serienfarbe – Lesbarkeit).
+.pos, .neg { font-weight: 600; color: inherit; text-decoration: underline 3px; text-underline-offset: 4px; }
 .pos { text-decoration-color: $srb-pos; }
 .neg { text-decoration-color: $srb-neg; }
+
+// Deutsch hat lange Wörter: Silbentrennung statt Flatterrand, keine Einzelwörter am Absatzende
+// (hyphenate-limit-chars: kurze Wörter wie „den-ken“ bleiben ganz – sonst Trennstrich in jeder Zeile)
+.narrative p, .prose p, .prose li { hyphens: auto; hyphenate-limit-chars: 8 3 4; text-wrap: pretty; }
+// URLs und Code nie mit Trennstrich: „git-hub.com“ sähe aus wie eine echte Adresse
+.prose a, .narrative a, .prose code, .narrative code { hyphens: manual; }
+
+// Links im Text: Textfarbe, nur die dünne Unterstreichung ist blau
+.prose a, .narrative a {
+  color: $srb-text;
+  text-decoration-color: $srb-accent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  &:hover { color: $srb-accent; }
+}
 
 // ---------- Fließtext-Abschnitte (Methodik, Quellen) ----------
 .prose {
   justify-self: center;
-  width: min(760px, 100%);
+  width: min(#{$srb-col}, 100%);
   margin: 1.5rem 0 0;
   padding: 0 1.25rem 2rem;
 }
 
 .callout { border-radius: $srb-radius; }
+
+// „Unsere Daten“: ohne Farbstreifen und Symbol, nur oben und unten eine Linie.
+// .callout-titled: Quarto rückt den Text sonst für das (ausgeblendete) Symbol ein.
+.prose .callout.callout-style-simple {
+  border: 0;
+  border-block: 1px solid $srb-line;
+  border-radius: 0;
+  background: none;
+  padding: .9rem 0;
+}
+.prose .callout .callout-icon-container { display: none; }
+.prose .callout.callout-titled.callout-style-simple .callout-body { padding-left: 0; font-size: 1rem; }
+.prose .callout.callout-style-simple > .callout-header { opacity: 1; font-size: 1rem; font-weight: 700; }
+
+// Ziffern gleich breit, damit Zahlen in Spalten untereinanderstehen
+.prose table, .sample-cards { font-variant-numeric: tabular-nums; }
 
 // Spielnamen nicht mitten im Titel umbrechen („Baldur's / Gate 3“) – nur, wo Platz ist
 @media (min-width: 768px) {
@@ -232,15 +317,16 @@ table { font-size: .95rem; }
 main#quarto-document-content { margin-bottom: 0; }
 
 // #quarto-document-content: sonst gewinnt Quartos .page-full > * { grid-column }
+// Linie über die volle Breite, Text an der Kante der Textspalte
 #quarto-document-content > .site-footer {
   grid-column: screen-start / screen-end;
   margin-top: 3rem;
-  padding: 1.5rem 1.25rem;
+  padding: 1.5rem max(1.25rem, calc((100% - #{$srb-col}) / 2 + 1.25rem)) 2.5rem;
   border-top: 1px solid $srb-line;
-  background: $srb-bg-raised;
+  background: none;
   color: $srb-muted;
-  font-size: .95rem;
-  text-align: center;
+  font-size: .9rem;
+  text-align: left;
 
   p { margin: 0; }
   .nowrap { white-space: nowrap; }
@@ -322,8 +408,8 @@ html.srb-linear .cr-section {
   .sample-card {
     padding: .7rem .85rem;
     border: 1px solid $srb-line;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, .03);
+    border-radius: $srb-radius;
+    background: none;
   }
   dt { margin-bottom: .3rem; color: #fff; font-weight: 700; }
   dd { margin: 0; font-size: .9rem; line-height: 1.45; }
@@ -331,9 +417,9 @@ html.srb-linear .cr-section {
   .k {
     display: block;
     color: $srb-muted;
-    font-size: .7rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
+    font-size: .8rem;
+    letter-spacing: 0;
+    text-transform: none;
   }
 }
 
@@ -355,7 +441,7 @@ html.srb-linear .cr-section {
     }
   }
 
-  #title-block-header { padding: 12svh 1rem 7svh; }
+  #title-block-header { padding: 10svh $srb-mobile-gutter 2rem; }
 
   // Überschriften und Fließtext bündig mit den Karten
   // (#quarto-document-content: sonst gewinnt Quartos .page-full > * { grid-column })
@@ -371,6 +457,8 @@ html.srb-linear .cr-section {
   }
 
   .prose { padding-bottom: 1.5rem; }
+
+  #quarto-document-content > .site-footer { padding-inline: $srb-mobile-gutter; }
 
   // Tabellen notfalls horizontal scrollbar statt abgeschnitten
   .prose table {

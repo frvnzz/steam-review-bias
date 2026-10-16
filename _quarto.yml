@@ -5,6 +5,7 @@ project:
     - index.qmd
   resources:
     - js/vendor/lenis/
+    - fonts/OFL.txt   # Lizenz; die Schriften selbst kopiert Quarto mit dem Theme
 
 execute:
   freeze: auto   # Ergebnisse in _freeze/ – CI braucht dadurch kein R
@@ -41,10 +42,10 @@ format:
       # eigene Hintergrundfarbe wird dadurch einen Tick dunkler gerendert (sichtbare Kante)
       section-background-color: "transparent"
       narrative-background-color-sidebar: "transparent"
-      narrative-background-color-overlay: "rgba(23, 33, 48, 0.92)"
+      narrative-background-color-overlay: "rgba(27, 40, 56, 0.97)"
       narrative-text-color-sidebar: "#dce6ef"
       narrative-text-color-overlay: "#dce6ef"
-      narrative-font-size: "1.08rem"
-      narrative-border-radius: "12px"
+      narrative-font-size: "1.125rem"
+      narrative-border-radius: "2px"
       narrative-sidebar-width: "minmax(360px, 1.2fr)"
       narrative-overlay-max-width: "520px"

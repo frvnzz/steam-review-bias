@@ -83,6 +83,12 @@ print_mobile <- function(p, facet = NULL, size_scale = 1, date_breaks = NULL, dr
     x = wrap_label(lab$x, 38),
     y = wrap_label(lab$y, 30)
   )
+  # Viele Gruppen auf einer diskreten x-Achse (z. B. neun Spielzeit-Gruppen) passen
+  # am Handy nicht nebeneinander: Beschriftung auf zwei Zeilen versetzen statt drehen
+  x_par <- ggplot_build(p)$layout$panel_params[[1]]$x
+  if (inherits(x_par, "ViewScale") && x_par$is_discrete() && length(x_par$get_breaks()) > 6) {
+    p <- p + guides(x = guide_axis(n.dodge = 2))
+  }
   # Grafiken mit vollständigem eigenem Theme (z. B. theme_void) behalten es
   old <- theme_set(theme_srb_mobile())
   on.exit(theme_set(old))

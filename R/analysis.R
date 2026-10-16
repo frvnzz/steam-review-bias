@@ -73,8 +73,9 @@ plot_playtime_hist <- function(reviews, which_game) {
   st <- tibble(stat = c("Median", "Mittelwert"),
                value = c(median(d$playtime_h), mean(d$playtime_h)))
   ggplot(d, aes(playtime_h)) +
-    geom_histogram(bins = 45, fill = srb_col[["accent"]], colour = srb_col[["bg"]],
-                   linewidth = 0.3, alpha = 0.85) +
+    # Grau statt Blau: Blau steht auf der Seite nur für „positiv“
+    geom_histogram(bins = 45, fill = srb_col[["grey"]], colour = srb_col[["bg"]],
+                   linewidth = 0.3) +
     geom_vline(data = st, aes(xintercept = value), colour = srb_col[["text"]],
                linewidth = 0.6, linetype = c("solid", "22")) +
     geom_label(data = st, aes(x = value, y = Inf, label = paste0(stat, "\n", fmt_num(value), " h")),
@@ -85,7 +86,7 @@ plot_playtime_hist <- function(reviews, which_game) {
                   breaks = c(0.1, 1, 10, 100, 1000)) +
     labs(x = "Spielzeit beim Schreiben der Review (logarithmische Achse)",
          y = "Anzahl Reviews",
-         title = paste0(which_game, ": Wie lange wurde vor der Review gespielt?"),
+         title = paste0(which_game, ": Spielzeit bis zur Review"),
          subtitle = "Jeder Balken umfasst einen gleich breiten Bereich auf der logarithmischen Achse")
 }
 
@@ -101,11 +102,14 @@ plot_share_by_playtime <- function(reviews) {
     geom_point(colour = srb_col[["pos"]], size = 2.4) +
     facet_wrap(~game, ncol = 1) +
     scale_y_continuous(labels = \(x) fmt_pct(x), limits = c(NA, 1)) +
-    labs(x = "Spielzeit beim Schreiben der Review", y = "Anteil positiv",
-         title = "Wer früh bewertet, urteilt oft anders",
-         subtitle = "Anteil positiver Reviews je Spielzeit-Gruppe · Striche: 95-%-Unsicherheitsintervall · y-Achse beginnt nicht bei 0 %",
-         caption = "Gruppen mit weniger als 30 Reviews ausgeblendet") +
-    theme(axis.text.x = element_text(angle = 35, hjust = 1))
+    # Achse ohne „ h“: die Einheit steht im Achsentitel, so passen die Gruppen ungedreht
+    scale_x_discrete(labels = \(x) sub(" h$", "", x)) +
+    labs(x = "Spielzeit beim Schreiben der Review, in Stunden", y = "Anteil positiv",
+         title = "Reviews nach weniger als 2 Stunden sind seltener positiv",
+         subtitle = "Anteil positiver Reviews je Spielzeit-Gruppe mit 95-%-Unsicherheitsintervall (Striche)",
+         caption = "y-Achse beginnt nicht bei 0 %. Gruppen mit weniger als 30 Reviews ausgeblendet.") +
+    # mehr Luft zwischen den Feldern: der linksbündige Spielname stößt sonst an die Achse darüber
+    theme(panel.grid.major.x = element_blank(), panel.spacing.y = unit(1.2, "lines"))
 }
 
 # ---- Kapitel 4: Wer sind die Reviewer? -------------------------------------
@@ -122,12 +126,12 @@ reviewer_table <- function(reviews) {
 plot_reviewer_mix <- function(reviews) {
   d <- reviewer_table(reviews)
   ggplot(d, aes(prop, bin)) +
-    geom_col(fill = srb_col[["accent"]], width = 0.7) +
+    geom_col(fill = srb_col[["grey"]], width = 0.7) +   # Grau: Menge, keine Wertung
     geom_text(aes(label = fmt_pct(prop)), hjust = -0.15, size = 3.6) +
     facet_wrap(~game, nrow = 1) +
     scale_x_continuous(labels = \(x) fmt_pct(x), expand = expansion(c(0, 0.25))) +
     labs(x = "Anteil der Reviews", y = "Reviews, die die Person\ninsgesamt geschrieben hat",
-         title = "Wer schreibt die Reviews?",
+         title = "Nur wenige Reviews stammen von Viel-Reviewern",
          subtitle = "Verteilung nach Anzahl aller Reviews der Autor:innen (heutiger Stand)") +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
 }
@@ -142,8 +146,11 @@ plot_reviewer_share <- function(reviews) {
     scale_y_continuous(labels = \(x) fmt_pct(x), limits = c(NA, 1)) +
     labs(x = "Reviews, die die Person insgesamt geschrieben hat", y = "Anteil positiv",
          title = "Viel-Reviewer bewerten seltener positiv",
-         subtitle = "Anteil positiver Reviews · Striche: 95-%-Unsicherheitsintervall · y-Achse beginnt nicht bei 0 %",
-         caption = "Gruppen mit weniger als 30 Reviews ausgeblendet")
+         subtitle = "Anteil positiver Reviews mit 95-%-Unsicherheitsintervall (Striche)",
+         caption = "y-Achse beginnt nicht bei 0 %. Gruppen mit weniger als 30 Reviews ausgeblendet.") +
+    # senkrechte Linien weg: die Gruppen liest man an den Punkten ab, nicht an Gitterlinien;
+    # mehr Luft zwischen den Feldern, damit der Spielname nicht an „70 %“ darüber stößt
+    theme(panel.grid.major.x = element_blank(), panel.spacing.y = unit(1.2, "lines"))
 }
 
 # ---- Kapitel 5: Review-Bombing ---------------------------------------------
@@ -151,12 +158,13 @@ plot_reviewer_share <- function(reviews) {
 plot_daily_volume <- function(daily, which_game, shade = NULL) {
   d <- filter(daily, game == which_game, filter_offtopic)
   p <- ggplot(d, aes(date, n_total)) +
-    geom_col(fill = srb_col[["accent"]], width = 1, alpha = 0.9) +
+    geom_col(fill = srb_col[["grey"]], width = 1) +   # Grau: Menge, keine Wertung
     scale_y_continuous(labels = \(x) fmt_num(x)) +
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
     labs(x = NULL, y = "Neue Reviews pro Tag",
          title = paste0(which_game, ": Reviews pro Tag"),
-         subtitle = "Nach Tag der Erstellung (UTC)")
+         subtitle = "Nach Tag der Erstellung (UTC)") +
+    theme(panel.grid.major.x = element_blank())
   add_shade(p, shade)
 }
 
@@ -170,7 +178,8 @@ plot_daily_share <- function(daily, which_game, shade = NULL) {
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
     labs(x = NULL, y = "Anteil positiv (heutiger Stand)",
          title = paste0(which_game, ": Anteil positiver Reviews pro Tag"),
-         subtitle = "Nach Tag der Erstellung (UTC) · positiv oder negativ nach heutigem Stand")
+         subtitle = "Nach Tag der Erstellung (UTC), positiv oder negativ nach heutigem Stand") +
+    theme(panel.grid.major.x = element_blank())
   add_shade(p, shade)
 }
 
@@ -190,9 +199,9 @@ plot_offtopic <- function(daily, which_game, short_legend = FALSE) {
     scale_y_continuous(labels = \(x) fmt_num(x)) +
     scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
     labs(x = NULL, y = "Negative Reviews pro Tag",
-         title = paste0(which_game, ": Was Steam ausblendet"),
+         title = paste0(which_game, ": Steams Filter blendet die Review-Welle aus"),
          subtitle = "Negative Reviews pro Tag, mit und ohne Steams Off-Topic-Filter") +
-    theme(legend.direction = "vertical")
+    theme(legend.direction = "vertical", panel.grid.major.x = element_blank())
 }
 
 # ---- Kapitel 6: Weitere Selektionsfaktoren ---------------------------------
@@ -222,7 +231,7 @@ plot_factors <- function(reviews, min_n = 20) {
     scale_x_continuous(labels = \(x) fmt_pct(x), breaks = seq(0, 1, 0.2),
                        expand = expansion(mult = c(0.08, 0.2))) +
     labs(x = "Anteil positiv", y = NULL,
-         title = "Gleiches Spiel, andere Gruppe, andere Zahl",
+         title = "Reviews zurückgegebener Spiele sind seltener positiv",
          subtitle = "Anteil positiver Reviews mit 95-%-Unsicherheitsintervall",
          caption = paste0("Gruppen mit weniger als ", min_n, " Reviews ausgeblendet")) +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
@@ -252,8 +261,8 @@ plot_languages <- function(reviews, top = 6) {
     facet_wrap(~game, nrow = 1) +
     scale_x_continuous(labels = \(x) fmt_pct(x)) +
     labs(x = "Anteil positiv", y = NULL,
-         title = "Je nach Sprache ein anderes Bild",
-         subtitle = paste0("Die ", top, " häufigsten Sprachen über alle drei Spiele · Striche: 95-%-Unsicherheitsintervall")) +
+         title = "Der Anteil positiver Reviews unterscheidet sich je nach Sprache",
+         subtitle = paste0("Die ", top, " häufigsten Sprachen über alle drei Spiele, mit 95-%-Unsicherheitsintervall")) +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
 }
 

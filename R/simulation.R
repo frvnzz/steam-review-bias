@@ -111,7 +111,8 @@ plot_comparison <- function(s, stacked = FALSE) {
     scale_x_continuous(labels = \(x) fmt_pct(x), limits = c(0, 1),
                        breaks = seq(0, 1, 0.25), expand = expansion(mult = c(0, 0.04))) +
     labs(x = "Anteil zufrieden bzw. positiv", y = NULL,
-         title = "Dieselben Spieler:innen, drei verschiedene Zahlen",
+         title = sprintf("%s sind zufrieden, die Reviews zeigen %s oder %s",
+                         fmt_pct(s$share_true), fmt_pct(s$share_A), fmt_pct(s$share_B)),
          subtitle = "Die gestrichelte Linie ist der wahre Anteil Zufriedener") +
     theme(panel.grid.major.y = element_blank(),
           axis.text.y = element_text(colour = srb_col[["text"]], size = rel(1 / 0.85), hjust = 0))   # = Grundschrift (axis.text ist 0,85)
