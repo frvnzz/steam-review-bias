@@ -250,7 +250,9 @@ main#quarto-document-content { margin-top: 0; }
     border-top: 4px solid $srb-pos;   // Wasserlinie
     border-radius: 0 0 45% 45% / 0 0 22% 22%;
     background: rgba(47, 143, 204, .07);
-    .value { font-size: clamp(4.5rem, 12vw, 8.5rem); }
+    // Das Fragezeichen der Serifenschrift wirkt in dieser Größe schwerfällig;
+    // dünne Grotesk passt zu den Beschriftungen darüber und darunter.
+    .value { font-size: clamp(4.5rem, 12vw, 8.5rem); font-family: $srb-sans; font-weight: 300; }
     .label { font-size: clamp(1.05rem, 2vw, 1.35rem); }
     .note { display: block; margin: .9rem auto 0; max-width: 20rem; font-family: $srb-sans; font-size: .85rem; color: $srb-muted; }
   }
