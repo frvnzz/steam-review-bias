@@ -9,10 +9,13 @@
 
 team_to_cff <- function(author) {
   n <- author$name
-  person <- if (is.list(n)) {
-    list(`given-names` = n$given, `family-names` = n$family)
-  } else {
+  person <- if (!is.list(n)) {
     list(name = n)
+  } else if (!is.null(n$literal)) {
+    list(name = n$literal)
+  } else {
+    # Fehlende Teile weglassen (nur Vorname o. Ä.): `family-names: ~` wäre ungültiges CFF
+    Filter(Negate(is.null), list(`given-names` = n$given, `family-names` = n$family))
   }
   if (!is.null(author$email)) person$email <- author$email
   if (!is.null(author$orcid)) {
