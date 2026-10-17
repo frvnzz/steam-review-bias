@@ -55,12 +55,8 @@ html_escape <- function(x) {
 
 #' @param p           fertige ggplot-Grafik (Desktop-Fassung oder eigene Handy-Fassung)
 #' @param facet       optional neue Facettierung, z. B. facet_wrap(~game, ncol = 1)
-#' @param date_breaks optional gröbere Datums-Ticks für Zeitreihen
-print_mobile <- function(p, facet = NULL, date_breaks = NULL) {
+print_mobile <- function(p, facet = NULL) {
   if (!is.null(facet)) p <- p + facet
-  if (!is.null(date_breaks)) {
-    p <- p + scale_x_date(date_labels = "%d.%m.%y", date_breaks = date_breaks)
-  }
 
   # Titel, Untertitel und Quellenhinweis als HTML um das Bild herum
   lab <- get_labs(p)
@@ -87,7 +83,8 @@ print_mobile <- function(p, facet = NULL, date_breaks = NULL) {
   print(p)
 
   if (!is.null(lab$caption)) {
-    cat('\n\n<p class="fig-caption">', html_escape(lab$caption), "</p>\n", sep = "")
+    cat('\n\n<p class="fig-caption">', gsub("\n", "<br>", html_escape(lab$caption), fixed = TRUE),
+        "</p>\n", sep = "")
   }
   invisible(NULL)
 }
@@ -104,9 +101,12 @@ dot_rows_mobile <- function(d, facet_var, lab, x_breaks = waiver()) {
   ggplot(d, aes(share, game)) +
     geom_linerange(aes(xmin = lo, xmax = hi), colour = srb_col[["muted"]], linewidth = 0.8) +
     geom_point(colour = srb_col[["pos"]], size = 2.6) +
+    n_label(size = 3.2) +
     facet_wrap(vars({{ facet_var }}), ncol = 1) +
     scale_y_discrete(drop = FALSE) +
-    scale_x_continuous(labels = \(x) fmt_pct(x), breaks = x_breaks) +
+    # rechts Platz für „n = …“ über Punkten nahe 100 %
+    scale_x_continuous(labels = \(x) fmt_pct(x), breaks = x_breaks,
+                       expand = expansion(mult = c(0.05, 0.2))) +
     labs(x = lab$x, y = NULL, title = lab$title, subtitle = lab$subtitle, caption = lab$caption) +
     theme(panel.grid.major.y = element_blank(), panel.spacing.y = unit(0.6, "lines"))
 }

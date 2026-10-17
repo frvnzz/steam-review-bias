@@ -86,26 +86,43 @@ playtime_stats <- function(reviews) {
     )
 }
 
-plot_playtime_hist <- function(reviews, which_game) {
-  d <- filter(reviews, game == which_game, playtime_h > 0)
+# Lineare Achse, damit die Rechtsschiefe zu sehen ist, über die der Text spricht
+# (auf einer logarithmischen Achse wirkt dieselbe Verteilung linksschief).
+# Die wenigen Reviews über max_h Stunden würden die Achse sonst auf ein Vielfaches
+# strecken; sie stehen im Quellenhinweis, Median und Mittelwert zählen sie mit.
+# stat_labels = FALSE (Handy): Median und Mittelwert im Untertitel statt an den
+# Linien – dort ist links der Median-Linie kein Platz für die Beschriftung.
+plot_playtime_hist <- function(reviews, which_game, max_h = 1000, binwidth = 20,
+                               stat_labels = TRUE) {
+  d <- filter(reviews, game == which_game, !is.na(playtime_h))
   st <- tibble(stat = c("Median", "Mittelwert"),
                value = c(median(d$playtime_h), mean(d$playtime_h)))
-  ggplot(d, aes(playtime_h)) +
+  n_over <- sum(d$playtime_h > max_h)
+  subtitle <- if (stat_labels) {
+    paste0("Reviews je ", binwidth, "-Stunden-Bereich, der Mittelwert liegt weit über dem Median")
+  } else {
+    sprintf("Reviews je %d-Stunden-Bereich. Median %s h (durchgezogene Linie), Mittelwert %s h (gestrichelt)",
+            binwidth, fmt_num(st$value[1]), fmt_num(st$value[2]))
+  }
+  ggplot(filter(d, playtime_h <= max_h), aes(playtime_h)) +
     # Grau statt Blau: Blau steht auf der Seite nur für „positiv“
-    geom_histogram(bins = 45, fill = srb_col[["grey"]], colour = srb_col[["bg"]],
-                   linewidth = 0.3) +
+    geom_histogram(binwidth = binwidth, boundary = 0, fill = srb_col[["grey"]],
+                   colour = srb_col[["bg"]], linewidth = 0.3) +
     geom_vline(data = st, aes(xintercept = value), colour = srb_col[["text"]],
                linewidth = 0.6, linetype = c("solid", "22")) +
-    geom_label(data = st, aes(x = value, y = Inf, label = paste0(stat, "\n", fmt_num(value), " h")),
-               vjust = 1.1, hjust = c(1.05, -0.05), size = 3.8, lineheight = 0.9,
-               fill = srb_col[["bg"]], colour = srb_col[["text"]], linewidth = 0) +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.22))) +
-    scale_x_log10(labels = \(x) paste(ifelse(x < 1, fmt_num(x, 1), fmt_num(x)), "h"),
-                  breaks = c(0.1, 1, 10, 100, 1000)) +
-    labs(x = "Spielzeit beim Schreiben der Review (logarithmische Achse)",
-         y = "Anzahl Reviews",
-         title = paste0(which_game, ": Spielzeit bis zur Review"),
-         subtitle = "Jeder Balken umfasst einen gleich breiten Bereich auf der logarithmischen Achse")
+    (if (stat_labels) {
+      geom_label(data = st, aes(x = value, y = Inf, label = paste0(stat, "\n", fmt_num(value), " h")),
+                 vjust = 1.1, hjust = c(1.05, -0.05), size = 3.8, lineheight = 0.9,
+                 fill = srb_col[["bg"]], colour = srb_col[["text"]], linewidth = 0)
+    }) +
+    scale_y_continuous(labels = \(x) fmt_num(x), expand = expansion(mult = c(0, 0.22))) +
+    scale_x_continuous(labels = \(x) paste(fmt_num(x), "h"), breaks = seq(0, max_h, 200),
+                       expand = expansion(mult = c(0.01, 0.02))) +
+    labs(x = "Spielzeit beim Schreiben der Review", y = "Anzahl Reviews",
+         title = paste0(which_game, ": Wenige Vielspieler:innen ziehen den Mittelwert hoch"),
+         subtitle = subtitle,
+         caption = with_source(sprintf("%s Reviews mit mehr als %s Stunden sind nicht eingezeichnet.",
+                                       fmt_num(n_over), fmt_num(max_h))))
 }
 
 plot_share_by_playtime <- function(reviews) {
@@ -121,8 +138,8 @@ plot_share_by_playtime <- function(reviews) {
     labs(x = "Spielzeit beim Schreiben der Review, in Stunden", y = "Anteil positiv",
          title = "Reviews nach weniger als 2 Stunden sind seltener positiv",
          subtitle = "Anteil positiver Reviews je Spielzeit-Gruppe mit 95-%-Unsicherheitsintervall (Striche)",
-         caption = paste0("y-Achse beginnt nicht bei 0 %. Gruppen mit weniger als ", min_group_n,
-                          " Reviews ausgeblendet.")) +
+         caption = with_source(paste0("y-Achse beginnt nicht bei 0 %. Gruppen mit weniger als ",
+                                      min_group_n, " Reviews ausgeblendet."))) +
     # mehr Luft zwischen den Feldern: der linksbündige Spielname stößt sonst an die Achse darüber
     theme(panel.grid.major.x = element_blank(), panel.spacing.y = unit(1.2, "lines"))
 }
@@ -142,12 +159,15 @@ plot_reviewer_mix <- function(reviews) {
   d <- reviewer_table(reviews)
   ggplot(d, aes(prop, bin)) +
     geom_col(fill = srb_col[["grey"]], width = 0.7) +   # Grau: Menge, keine Wertung
-    geom_text(aes(label = fmt_pct(prop)), hjust = -0.15, size = 3.6) +
+    # kleine Anteile mit einer Nachkommastelle, wie im Text („0,8 %“ statt „1 %“)
+    geom_text(aes(label = ifelse(prop < 0.05, fmt_pct(prop, 1), fmt_pct(prop))),
+              hjust = -0.15, size = 3.6) +
     facet_wrap(~game, nrow = 1) +
     scale_x_continuous(labels = \(x) fmt_pct(x), expand = expansion(c(0, 0.25))) +
     labs(x = "Anteil der Reviews", y = "Reviews, die die Person\ninsgesamt geschrieben hat",
          title = "Nur wenige Reviews stammen von Viel-Reviewern",
-         subtitle = "Verteilung nach Anzahl aller Reviews der Autor:innen (heutiger Stand)") +
+         subtitle = "Verteilung nach Anzahl aller Reviews der Autor:innen (heutiger Stand)",
+         caption = with_source()) +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
 }
 
@@ -162,8 +182,8 @@ plot_reviewer_share <- function(reviews) {
     labs(x = "Reviews, die die Person insgesamt geschrieben hat", y = "Anteil positiv",
          title = "Viel-Reviewer bewerten seltener positiv",
          subtitle = "Anteil positiver Reviews mit 95-%-Unsicherheitsintervall (Striche)",
-         caption = paste0("y-Achse beginnt nicht bei 0 %. Gruppen mit weniger als ", min_group_n,
-                          " Reviews ausgeblendet.")) +
+         caption = with_source(paste0("y-Achse beginnt nicht bei 0 %. Gruppen mit weniger als ",
+                                      min_group_n, " Reviews ausgeblendet."))) +
     # senkrechte Linien weg: die Gruppen liest man an den Punkten ab, nicht an Gitterlinien;
     # mehr Luft zwischen den Feldern, damit der Spielname nicht an „70 %“ darüber stößt
     theme(panel.grid.major.x = element_blank(), panel.spacing.y = unit(1.2, "lines"))
@@ -171,52 +191,64 @@ plot_reviewer_share <- function(reviews) {
 
 # ---- Kapitel 5: Review-Bombing ---------------------------------------------
 
-plot_daily_volume <- function(daily, which_game, shade = NULL) {
+# title: Aussage der Grafik (index.qmd setzt sie mit den Zahlen der Spitze)
+plot_daily_volume <- function(daily, which_game, shade = NULL,
+                              title = paste0(which_game, ": Reviews pro Tag")) {
   d <- filter(daily, game == which_game, filter_offtopic)
   ggplot(d, aes(date, n_total)) +
-    shade_layer(shade) +
+    shade_layer(shade, label = "Review-Bombing") +
     geom_col(fill = srb_col[["grey"]], width = 1) +   # Grau: Menge, keine Wertung
     scale_y_continuous(labels = \(x) fmt_num(x)) +
-    scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
-    labs(x = NULL, y = "Neue Reviews pro Tag",
-         title = paste0(which_game, ": Reviews pro Tag"),
-         subtitle = "Nach Tag der Erstellung (UTC)") +
+    scale_x_month() +
+    labs(x = NULL, y = "Neue Reviews pro Tag", title = title,
+         subtitle = "Nach Tag der Erstellung (UTC)", caption = with_source()) +
     theme(panel.grid.major.x = element_blank())
 }
 
-plot_daily_share <- function(daily, which_game, shade = NULL) {
+# Ohne Unsicherheitsband: Die Tageswerte sind Vollzählungen aller heute
+# vorhandenen Reviews, keine Stichprobe. Ein Intervall würde Zufallsschwankung
+# suggerieren, wo keine Stichprobe gezogen wurde.
+plot_daily_share <- function(daily, which_game, shade = NULL,
+                             title = paste0(which_game, ": Anteil positiver Reviews pro Tag")) {
   d <- filter(daily, game == which_game, filter_offtopic, n_total > 0) |>
-    mutate(wilson(n_positive, n_total))
+    mutate(share = n_positive / n_total)
   ggplot(d, aes(date, share)) +
-    shade_layer(shade) +
-    geom_ribbon(aes(ymin = lo, ymax = hi), fill = srb_col[["pos"]], alpha = 0.25) +
+    shade_layer(shade, label = "Review-Bombing", label_at = "bottom") +
     geom_line(colour = srb_col[["pos"]], linewidth = 0.8) +
     scale_y_continuous(labels = \(x) fmt_pct(x), limits = c(0, 1)) +
-    scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
-    labs(x = NULL, y = "Anteil positiv (heutiger Stand)",
-         title = paste0(which_game, ": Anteil positiver Reviews pro Tag"),
-         subtitle = "Nach Tag der Erstellung (UTC), positiv oder negativ nach heutigem Stand") +
+    scale_x_month() +
+    labs(x = NULL, y = "Anteil positiv (heutiger Stand)", title = title,
+         subtitle = "Nach Tag der Erstellung (UTC), positiv oder negativ nach heutigem Stand",
+         caption = with_source()) +
     theme(panel.grid.major.x = element_blank())
 }
 
+# Ohne Filter getrennt nach positiv/negativ, dazu alle Reviews der Standardansicht:
+# So sieht man, dass Steam in der Off-Topic-Phase auch die positiven Reviews ausblendet.
+# Unterscheidung nicht nur über die Farbe: Standardansicht gestrichelt.
 # short_legend: kürzere Legende für die Handy-Fassung
 plot_offtopic <- function(daily, which_game, short_legend = FALSE) {
-  lab_all <- "Ohne Filter: alle Reviews"
-  lab_std <- if (short_legend) "Standard: Off-Topic ausgeblendet"
-             else "Standardansicht: Off-Topic-Phasen ausgeblendet"
-  d <- daily |>
-    filter(game == which_game) |>
-    mutate(n_negative = n_total - n_positive,
-           variant = if_else(filter_offtopic, lab_std, lab_all))
-  ggplot(d, aes(date, n_negative, colour = variant)) +
+  labs_v <- c(neg = "Negativ, ohne Filter", pos = "Positiv, ohne Filter",
+              std = if (short_legend) "Alle, Standard (Off-Topic ausgeblendet)"
+                    else "Alle, Standardansicht (Off-Topic-Phasen ausgeblendet)")
+  w <- filter(daily, game == which_game)
+  d <- bind_rows(
+    filter(w, !filter_offtopic) |> transmute(date, n = n_total - n_positive, variant = labs_v[["neg"]]),
+    filter(w, !filter_offtopic) |> transmute(date, n = n_positive, variant = labs_v[["pos"]]),
+    filter(w, filter_offtopic) |> transmute(date, n = n_total, variant = labs_v[["std"]])
+  ) |>
+    mutate(variant = factor(variant, levels = labs_v))
+  ggplot(d, aes(date, n, colour = variant, linetype = variant)) +
     geom_line(linewidth = 0.8) +
-    scale_colour_manual(values = c(srb_col[["neg"]], srb_col[["muted"]]),
-                        breaks = c(lab_all, lab_std)) +
+    scale_colour_manual(values = unname(c(srb_col[["neg"]], srb_col[["pos"]], srb_col[["muted"]]))) +
+    scale_linetype_manual(values = c("solid", "solid", "22")) +
     scale_y_continuous(labels = \(x) fmt_num(x)) +
-    scale_x_date(date_labels = "%d.%m.%Y", date_breaks = "2 weeks") +
-    labs(x = NULL, y = "Negative Reviews pro Tag",
-         title = paste0(which_game, ": Steams Filter blendet die Review-Welle aus"),
-         subtitle = "Negative Reviews pro Tag, mit und ohne Steams Off-Topic-Filter") +
+    scale_x_month() +
+    labs(x = NULL, y = "Reviews pro Tag",
+         title = paste0(which_game, ": Steams Filter blendet die ganze Review-Welle aus"),
+         subtitle = "Auch die positiven Reviews aus der Off-Topic-Phase fehlen in der Standardansicht",
+         caption = with_source()) +
+    guides(colour = guide_legend(override.aes = list(linewidth = 1))) +
     theme(legend.direction = "vertical", panel.grid.major.x = element_blank())
 }
 
@@ -241,7 +273,14 @@ factors_labs <- function(min_n) {
   labs(x = "Anteil positiv", y = NULL,
        title = "Reviews zurückgegebener Spiele sind seltener positiv",
        subtitle = "Anteil positiver Reviews mit 95-%-Unsicherheitsintervall",
-       caption = paste0("Gruppen mit weniger als ", min_n, " Reviews ausgeblendet"))
+       caption = with_source(paste0("Gruppen mit weniger als ", min_n, " Reviews ausgeblendet.")))
+}
+
+# „n = …“ über jedem Punkt, auf Hintergrundfarbe: verdeckt die Gitterlinie dahinter
+n_label <- function(size = 3) {
+  geom_label(aes(label = paste0("n = ", fmt_num(n))), nudge_y = 0.36, size = size,
+             colour = srb_col[["muted"]], fill = srb_col[["bg"]], linewidth = 0,
+             label.padding = unit(0.08, "lines"))
 }
 
 plot_factors <- function(reviews, min_n = min_group_n) {
@@ -249,10 +288,10 @@ plot_factors <- function(reviews, min_n = min_group_n) {
   ggplot(filter(d, n >= min_n), aes(share, group)) +
     geom_linerange(aes(xmin = lo, xmax = hi), colour = srb_col[["muted"]], linewidth = 0.7) +
     geom_point(colour = srb_col[["pos"]], size = 2.8) +
-    geom_text(aes(label = paste0("n = ", fmt_num(n))), nudge_y = 0.35, size = 3,
-              colour = srb_col[["muted"]]) +
+    n_label() +
     facet_wrap(~game, nrow = 1) +
-    scale_x_continuous(labels = \(x) fmt_pct(x), breaks = seq(0, 1, 0.2),
+    # drei Felder nebeneinander: Striche im 25er-Abstand, sonst stoßen die Zahlen aneinander
+    scale_x_continuous(labels = \(x) fmt_pct(x), breaks = seq(0, 1, 0.25),
                        expand = expansion(mult = c(0.08, 0.2))) +
     factors_labs(min_n) +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
@@ -277,7 +316,8 @@ language_names <- c(
 languages_labs <- function(top) {
   labs(x = "Anteil positiv", y = NULL,
        title = "Der Anteil positiver Reviews unterscheidet sich je nach Sprache",
-       subtitle = paste0("Die ", top, " häufigsten Sprachen über alle drei Spiele, mit 95-%-Unsicherheitsintervall"))
+       subtitle = paste0("Die ", top, " häufigsten Sprachen über alle drei Spiele, mit 95-%-Unsicherheitsintervall"),
+       caption = with_source())
 }
 
 plot_languages <- function(reviews, top = 6) {
@@ -286,8 +326,10 @@ plot_languages <- function(reviews, top = 6) {
   ggplot(d, aes(share, reorder(lang, share))) +
     geom_linerange(aes(xmin = lo, xmax = hi), colour = srb_col[["muted"]], linewidth = 0.7) +
     geom_point(colour = srb_col[["pos"]], size = 2.8) +
+    n_label() +
     facet_wrap(~game, nrow = 1) +
-    scale_x_continuous(labels = \(x) fmt_pct(x)) +
+    scale_x_continuous(labels = \(x) fmt_pct(x), breaks = \(lim) pretty(lim, n = 3),
+                       expand = expansion(mult = c(0.15, 0.2))) +
     languages_labs(top) +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
 }
@@ -339,15 +381,25 @@ offtopic_stats <- function(daily, which_game) {
 fmt_date <- function(d) format(as.Date(d), "%d.%m.%Y")
 fmt_hours <- function(h) paste0(fmt_num(h), "\u00a0Stunden")
 
-# Grau hinterlegte Tage (z. B. die Review-Bombing-Spitze): ein Rechteck je
-# zusammenhängender Folge von Tagen. Als erste Ebene einfügen, dann liegt es unter
-# den Daten. Ohne Tage: NULL (fügt nichts hinzu).
-shade_layer <- function(days) {
+# Hinterlegte Tage (z. B. die Review-Bombing-Spitze): je zusammenhängender Folge
+# von Tagen eine Fläche mit gestrichelten Rändern (die Fläche allein wäre zu blass,
+# die Ränder haben 7:1 Kontrast), optional beschriftet rechts daneben – oben, oder
+# unten, wenn oben die Daten verlaufen. Als erste Ebene einfügen, dann liegt es
+# unter den Daten. Ohne Tage: NULL (fügt nichts hinzu).
+shade_layer <- function(days, label = NULL, label_at = c("top", "bottom")) {
   if (length(days) == 0) return(NULL)
+  label_at <- match.arg(label_at)
   days <- sort(days)
-  runs <- split(days, cumsum(c(1, diff(days) != 1)))
-  lapply(unname(runs), function(d) {
-    annotate("rect", xmin = min(d) - 0.5, xmax = max(d) + 0.5,
-             ymin = -Inf, ymax = Inf, fill = srb_col[["text"]], alpha = 0.08)
-  })
+  runs <- unname(split(days, cumsum(c(1, diff(days) != 1))))
+  edges <- do.call(c, lapply(runs, \(d) c(min(d) - 0.5, max(d) + 0.5)))
+  list(
+    lapply(runs, \(d) annotate("rect", xmin = min(d) - 0.5, xmax = max(d) + 0.5,
+                                ymin = -Inf, ymax = Inf, fill = srb_col[["text"]], alpha = 0.12)),
+    geom_vline(xintercept = edges, colour = srb_col[["muted"]], linewidth = 0.4, linetype = "22"),
+    if (!is.null(label)) {
+      annotate("text", x = max(days) + 1.5, y = if (label_at == "top") Inf else -Inf,
+               label = label, hjust = 0, vjust = if (label_at == "top") 1.6 else -0.9,
+               size = 3.6, colour = srb_col[["muted"]])
+    }
+  )
 }

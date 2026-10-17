@@ -199,9 +199,16 @@ html:not(.srb-linear) .cr-section.sidebar-left {
   strong { color: inherit; font-weight: 600; }
 }
 
-// Sticky-Grafiken
+// Sticky-Grafiken: SVGs in Originalgröße (Schrift überall gleich groß), kleiner nur,
+// wenn Spalte oder Fenster nicht reichen
 .cr-section .sticky-col .sticky {
   img { max-height: 88dvh; width: auto; max-width: 100%; }
+}
+// Grafiken oben ausrichten statt mittig: Aufeinanderfolgende Grafiken verschiedener
+// Höhe beginnen an derselben Stelle, beim Überblenden springt der Titel nicht.
+// (.sticky-col-stack: Closereads margin: auto ist sonst spezifischer)
+.cr-section .sticky-col .sticky-col-stack .sticky:has(img) {
+  margin: max(1.5rem, 6dvh) auto auto;
 }
 
 // Große Kennzahl als Sticky-Element (Hook usw.)

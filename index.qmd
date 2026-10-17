@@ -19,6 +19,8 @@ D <- load_data()
 r <- D$reviews
 summ <- D$summaries
 fetched <- as.Date(D$meta[["fetched_to"]])
+# Quellenhinweis unter jeder Grafik mit Steam-Daten (with_source() in R/theme.R)
+options(srb.source = paste("Daten: Steam-Schnittstelle GetAppReviews, abgerufen am", fmt_date(fetched)))
 docs_accessed <- as.Date("2026-10-15")   # Abrufdatum der zitierten Steam-Dokumentation
 
 BG3 <- game_name("bg3"); HADES <- game_name("hades"); HD2 <- game_name("helldivers2")
@@ -58,6 +60,9 @@ sample_n <- if (n_distinct(sample_info$n) == 1) fmt_num(sample_info$n[1]) else
 
 # Kapitel 3
 pt <- playtime_stats(r)
+bg3_h <- r$playtime_h[r$game == BG3 & !is.na(r$playtime_h)]
+bg3_over_1000 <- sum(bg3_h > 1000)
+bg3_under_200 <- mean(bg3_h < 200)
 short <- r |> filter(!is.na(playtime_h)) |> mutate(short = playtime_h < 2) |> share_by(game, short)
 pt_bins <- playtime_table(r)
 hd_pt_peak <- pt_bins |> filter(game == HD2, n >= min_group_n) |> slice_max(share, n = 1, with_ties = FALSE)
@@ -81,6 +86,8 @@ hd_filter_n <- D$daily |> filter(game == HD2) |> group_by(filter_offtopic) |> su
 stopifnot(nrow(hd_filter_n) == 2)   # mit und ohne Filter
 hd_filter_diff <- diff(hd_filter_n$n)
 off <- offtopic_stats(D$daily, BL2)
+hd_volume_title <- sprintf("%s: An %d Tagen kamen %s Reviews dazu", HD2, spike$n_days, fmt_num(spike$n_reviews))
+hd_share_title <- sprintf("%s: In den Spitzentagen waren nur %s positiv", HD2, fmt_pct(spike$share_pos))
 
 # Kapitel 6
 fac <- factor_table(r)
@@ -113,31 +120,51 @@ hd_nonsteam_total <- 1 - hd$total_reviews / hd$total_reviews_all
 # Alt-Texte (hier erzeugt, damit Apostrophe im Spielnamen das YAML nicht stören)
 alt <- list(
   hist = sprintf(
-    "Histogramm der Spielzeit beim Schreiben der Review für %s auf logarithmischer Achse. Die meisten Reviews liegen zwischen etwa 10 und 1.000 Stunden, mit einem langen Ausläufer zu kurzen Spielzeiten. Median %s Stunden, Mittelwert %s Stunden.",
-    BG3, fmt_num(value_for(pt, BG3, "median_h")), fmt_num(value_for(pt, BG3, "mean_h"))),
+    "Histogramm der Spielzeit beim Schreiben der Review für %s, 0 bis 1.000 Stunden in 20-Stunden-Schritten. Die Verteilung ist rechtsschief: %s der Reviews liegen unter 200 Stunden, ein langer Ausläufer reicht bis 1.000 Stunden; %s Reviews darüber sind nicht eingezeichnet. Median %s Stunden, Mittelwert %s Stunden.",
+    BG3, fmt_pct(bg3_under_200), fmt_num(bg3_over_1000),
+    fmt_num(value_for(pt, BG3, "median_h")), fmt_num(value_for(pt, BG3, "mean_h"))),
   pt_share = paste0(
     "Drei übereinanderliegende Liniendiagramme, je eines pro Spiel: Anteil positiver Reviews nach Spielzeit-Gruppe mit Unsicherheitsintervallen. ",
     "Bei allen drei Spielen ist der Anteil unter 2 Stunden Spielzeit deutlich niedriger. ",
-    sprintf("Bei %s sinkt er bei sehr langen Spielzeiten wieder auf %s.", HD2,
-            fmt_pct(value_for(pt_bins, HD2, "share", bin == "> 200 h")))),
-  rv_mix = "Drei Balkendiagramme, je eines pro Spiel: Anteil der Reviews nach Anzahl aller Reviews der Autor:innen. Die meisten Reviews stammen von Personen mit 1 bis 20 Reviews, nur wenige von Personen mit mehr als 100.",
-  rv_share = "Drei Liniendiagramme: Der Anteil positiver Reviews sinkt bei allen drei Spielen, je mehr Reviews die Person insgesamt geschrieben hat.",
+    sprintf("Bei %s sinkt er bei sehr langen Spielzeiten wieder auf %s. ", HD2,
+            fmt_pct(value_for(pt_bins, HD2, "share", bin == "> 200 h"))),
+    sprintf("Die y-Achse beginnt nicht bei 0 %%, Gruppen mit weniger als %d Reviews sind ausgeblendet.",
+            min_group_n)),
+  rv_mix = sprintf(
+    "Drei Balkendiagramme, je eines pro Spiel: Anteil der Reviews nach Anzahl aller Reviews der Autor:innen. Von Personen mit nur einer Review stammen %s bis %s der Reviews, von Personen mit mehr als 100 Reviews nur %s bis %s.",
+    fmt_pct(min(rv$prop[rv$bin == "1 Review"])), fmt_pct(max(rv$prop[rv$bin == "1 Review"])),
+    fmt_pct(min(rv$prop[rv$bin == "> 100"]), 1), fmt_pct(max(rv$prop[rv$bin == "> 100"]), 1)),
+  rv_share = paste0(
+    "Drei Liniendiagramme: Der Anteil positiver Reviews sinkt bei allen drei Spielen, je mehr Reviews die Person insgesamt geschrieben hat. Von Personen mit einer Review zu Personen mit mehr als 100: ",
+    paste(sprintf("%s von %s auf %s", games3,
+                  map_chr(games3, \(g) fmt_pct(value_for(rv, g, "share", bin == "1 Review"))),
+                  map_chr(games3, \(g) fmt_pct(value_for(rv, g, "share", bin == "> 100")))),
+          collapse = ", "),
+    sprintf(". Die y-Achse beginnt nicht bei 0 %%, Gruppen mit weniger als %d Reviews sind ausgeblendet.",
+            min_group_n)),
   hd_volume = sprintf(
-    "Säulendiagramm der neuen Reviews pro Tag für %s von %s bis %s. Anfang April rund %s pro Tag, danach abnehmend (Median im Juni rund %s). An %d Tagen Anfang Mai 2024 eine extreme Spitze mit bis zu %s.",
+    "Säulendiagramm der neuen Reviews pro Tag für %s von %s bis %s. Anfang April rund %s pro Tag, danach abnehmend (Median im Juni rund %s). An %d Tagen Anfang Mai 2024, grau hinterlegt und als Review-Bombing beschriftet, eine extreme Spitze mit bis zu %s.",
     HD2, fmt_date(min(hd_daily$date)), fmt_date(max(hd_daily$date)),
     fmt_num(spike$baseline), fmt_num(round(hd_month_median$n[hd_month_median$month == "06"], -1)),
     spike$n_days, fmt_num(spike$max_n)),
   hd_share = sprintf(
-    "Liniendiagramm des täglichen Anteils positiver Reviews für %s mit Unsicherheitsband. Vom %s bis %s liegt er bei rund %s. An den markierten Spitzentagen liegt er zwischen %s und %s, zusammengerechnet bei %s. Auch außerhalb der Spitze gibt es Einbrüche, etwa am %s auf %s.",
+    "Liniendiagramm des täglichen Anteils positiver Reviews für %s. Vom %s bis %s liegt er bei rund %s. An den grau hinterlegten Spitzentagen liegt er zwischen %s und %s, zusammengerechnet bei %s. Auch außerhalb der Spitze gibt es Einbrüche, etwa am %s auf %s.",
     HD2, fmt_date(spike$base_from), fmt_date(spike$base_to), fmt_pct(spike$share_pos_base),
     fmt_pct(hd_spike_share[1]), fmt_pct(hd_spike_share[2]), fmt_pct(spike$share_pos),
     fmt_date(hd_dip$date), fmt_pct(hd_dip$share_pos)),
-  offtopic = sprintf(
-    "Liniendiagramm der negativen Reviews pro Tag für %s, mit und ohne Steams Off-Topic-Filter. Vom %s bis %s liefert die Standardabfrage null Reviews, ohne Filter sind es bis zu %s negative pro Tag.",
+  offtopic = with(filter(D$daily, game == BL2, !filter_offtopic), sprintf(
+    "Liniendiagramm der Reviews pro Tag für %s: negative und positive ohne Filter (durchgezogen) und alle Reviews in Steams Standardansicht (gestrichelt). Vom %s bis %s liefert die Standardansicht null Reviews, ohne Filter sind es bis zu %s negative und %s positive pro Tag.",
     BL2, fmt_date(off$from), fmt_date(off$to),
-    fmt_num(max(D$daily$n_total[D$daily$game == BL2] - D$daily$n_positive[D$daily$game == BL2]))),
-  factors = "Punktdiagramme mit Unsicherheitsintervallen: Anteil positiver Reviews je Spiel für Gruppen wie auf Steam gekauft, nicht auf Steam gekauft, kostenlos erhalten, später zurückgegeben und meist auf dem Steam Deck gespielt. Zurückgegebene Spiele werden deutlich seltener positiv bewertet, die Intervalle sind dort sehr breit.",
-  lang = "Punktdiagramme mit Unsicherheitsintervallen: Anteil positiver Reviews je Spiel in den sechs häufigsten Sprachen über alle drei Spiele. Die Werte unterscheiden sich je nach Sprache teils deutlich."
+    fmt_num(max(n_total - n_positive)), fmt_num(max(n_positive)))),
+  factors = sprintf(
+    "Punktdiagramme mit Unsicherheitsintervallen: Anteil positiver Reviews je Spiel für Gruppen wie auf Steam gekauft, nicht auf Steam gekauft, kostenlos erhalten, später zurückgegeben und meist auf dem Steam Deck gespielt. Die meisten Gruppen liegen nah beieinander. Reviews zu später zurückgegebenen Spielen sind nur zu %s bis %s positiv, bei sehr breiten Intervallen. Gruppen mit weniger als %d Reviews sind ausgeblendet.",
+    fmt_pct(min(refunded_shown$share)), fmt_pct(max(refunded_shown$share)), min_group_n),
+  lang = paste0(
+    "Punktdiagramme mit Unsicherheitsintervallen: Anteil positiver Reviews je Spiel in den sechs häufigsten Sprachen über alle drei Spiele. ",
+    paste(map_chr(games3, \(g) sprintf("Bei %s reicht er von %s (%s) bis %s (%s)", g,
+                                       fmt_pct(lang_range[[g]]$lo$share), lang_range[[g]]$lo$name,
+                                       fmt_pct(lang_range[[g]]$hi$share), lang_range[[g]]$hi$name)),
+          collapse = ". "), ".")
 )
 ```
 
@@ -276,7 +303,7 @@ print_mobile(plot_population(sim, highlight_reviewers = TRUE, point_scale = 0.6)
 ::: {.d-none .d-md-block}
 ```{r}
 #| label: sim-compare-plot
-#| fig-width: 7
+#| fig-width: 7.5
 #| fig-height: 4.2
 #| fig-alt: !expr alt$sim_compare
 plot_comparison(sim)
@@ -341,7 +368,7 @@ cat("</dl>\n")
 
 Zu jeder Review speichert Steam, wie lange die Person das Spiel bis dahin gespielt hat. Bei *Baldur's Gate 3* liegt der **Median** bei `r fmt_hours(value_for(pt, BG3, "median_h"))`: Die eine Hälfte der Autor:innen hat kürzer gespielt, die andere länger. @cr-pt-hist
 
-Der **Mittelwert** liegt dagegen bei `r fmt_hours(value_for(pt, BG3, "mean_h"))` und damit deutlich höher, denn in Stunden gemessen ist die Verteilung **rechtsschief**: Einige wenige haben extrem viele Stunden gespielt und ziehen den Durchschnitt nach oben. Gegen solche Ausreißer ist der Median robust. (Die x-Achse der Grafik ist logarithmisch, jeder beschriftete Teilstrich steht für das Zehnfache des vorherigen. Das staucht die langen Spielzeiten zusammen, deshalb ist die Schiefe in der Grafik nicht zu sehen.) @cr-pt-hist
+Der **Mittelwert** liegt dagegen bei `r fmt_hours(value_for(pt, BG3, "mean_h"))` und damit deutlich höher, denn in Stunden gemessen ist die Verteilung **rechtsschief**: Einige wenige haben extrem viele Stunden gespielt und ziehen den Durchschnitt nach oben. Gegen solche Ausreißer ist der Median robust. In der Grafik ist das der lange Ausläufer nach rechts; `r fmt_num(bg3_over_1000)` Reviews mit mehr als 1.000 Stunden passen gar nicht mehr hinein. @cr-pt-hist
 
 Bei allen drei Spielen zeigt sich dasselbe Muster: *Hades* hat einen Median von `r fmt_hours(value_for(pt, HADES, "median_h"))` und einen Mittelwert von `r fmt_hours(value_for(pt, HADES, "mean_h"))`, bei *Helldivers 2* sind es `r fmt_hours(value_for(pt, HD2, "median_h"))` und `r fmt_hours(value_for(pt, HD2, "mean_h"))`. @cr-pt-hist
 
@@ -357,7 +384,7 @@ Außerdem ist eine Review eine Momentaufnahme: Je nach Spiel haben `r fmt_pct(mi
 ::: {.d-none .d-md-block}
 ```{r}
 #| label: pt-hist-plot
-#| fig-width: 7
+#| fig-width: 7.5
 #| fig-height: 4.6
 #| fig-alt: !expr alt$hist
 plot_playtime_hist(r, BG3)
@@ -370,7 +397,7 @@ plot_playtime_hist(r, BG3)
 #| fig-width: 4.2
 #| fig-height: 5.1
 #| fig-alt: !expr alt$hist
-print_mobile(plot_playtime_hist(r, BG3))
+print_mobile(plot_playtime_hist(r, BG3, stat_labels = FALSE))
 ```
 :::
 :::
@@ -379,7 +406,7 @@ print_mobile(plot_playtime_hist(r, BG3))
 ::: {.d-none .d-md-block}
 ```{r}
 #| label: pt-share-plot
-#| fig-width: 7
+#| fig-width: 7.5
 #| fig-height: 7.5
 #| fig-alt: !expr alt$pt_share
 plot_share_by_playtime(r)
@@ -418,7 +445,7 @@ Dazu kommen zwei Einschränkungen. Die Zahl der Reviews pro Person ist der heuti
 ::: {.d-none .d-md-block}
 ```{r}
 #| label: rv-mix-plot
-#| fig-width: 8
+#| fig-width: 7.5
 #| fig-height: 4.2
 #| fig-alt: !expr alt$rv_mix
 plot_reviewer_mix(r)
@@ -440,7 +467,7 @@ print_mobile(plot_reviewer_mix(r), facet = facet_wrap(~game, ncol = 1))
 ::: {.d-none .d-md-block}
 ```{r}
 #| label: rv-share-plot
-#| fig-width: 7
+#| fig-width: 7.5
 #| fig-height: 7.5
 #| fig-alt: !expr alt$rv_share
 plot_reviewer_share(r)
@@ -486,7 +513,7 @@ Steam blendet dabei den ganzen Zeitraum aus, auch die positiven Reviews. Laut St
 #| fig-width: 7.5
 #| fig-height: 4.4
 #| fig-alt: !expr alt$hd_volume
-plot_daily_volume(D$daily, HD2, shade = spike$days)
+plot_daily_volume(D$daily, HD2, shade = spike$days, title = hd_volume_title)
 ```
 :::
 ::: {.d-md-none}
@@ -496,7 +523,7 @@ plot_daily_volume(D$daily, HD2, shade = spike$days)
 #| fig-width: 4.2
 #| fig-height: 4.8
 #| fig-alt: !expr alt$hd_volume
-print_mobile(plot_daily_volume(D$daily, HD2, shade = spike$days), date_breaks = "1 month")
+print_mobile(plot_daily_volume(D$daily, HD2, shade = spike$days, title = hd_volume_title))
 ```
 :::
 :::
@@ -508,7 +535,7 @@ print_mobile(plot_daily_volume(D$daily, HD2, shade = spike$days), date_breaks = 
 #| fig-width: 7.5
 #| fig-height: 4.4
 #| fig-alt: !expr alt$hd_share
-plot_daily_share(D$daily, HD2, shade = spike$days)
+plot_daily_share(D$daily, HD2, shade = spike$days, title = hd_share_title)
 ```
 :::
 ::: {.d-md-none}
@@ -518,7 +545,7 @@ plot_daily_share(D$daily, HD2, shade = spike$days)
 #| fig-width: 4.2
 #| fig-height: 4.8
 #| fig-alt: !expr alt$hd_share
-print_mobile(plot_daily_share(D$daily, HD2, shade = spike$days), date_breaks = "1 month")
+print_mobile(plot_daily_share(D$daily, HD2, shade = spike$days, title = hd_share_title))
 ```
 :::
 :::
@@ -540,7 +567,7 @@ plot_offtopic(D$daily, BL2)
 #| fig-width: 4.2
 #| fig-height: 5.3
 #| fig-alt: !expr alt$offtopic
-print_mobile(plot_offtopic(D$daily, BL2, short_legend = TRUE), date_breaks = "1 month")
+print_mobile(plot_offtopic(D$daily, BL2, short_legend = TRUE))
 ```
 :::
 :::
@@ -572,7 +599,7 @@ Die Gesamtwertung auf der Shop-Seite mischt all diese Gruppen. Woran die Untersc
 ::: {.d-none .d-md-block}
 ```{r}
 #| label: factors-plot
-#| fig-width: 8.5
+#| fig-width: 7.5
 #| fig-height: 4.8
 #| fig-alt: !expr alt$factors
 plot_factors(r)
@@ -594,7 +621,7 @@ print_mobile(plot_factors_mobile(r))
 ::: {.d-none .d-md-block}
 ```{r}
 #| label: lang-plot
-#| fig-width: 8.5
+#| fig-width: 7.5
 #| fig-height: 4.6
 #| fig-alt: !expr alt$lang
 plot_languages(r)

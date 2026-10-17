@@ -18,9 +18,9 @@ srb_col <- c(
 )
 
 # base_size steuert Abstände und Ränder (wie bei theme_minimal), text_size die
-# Schriftgröße. Desktop: Abstände für 13 pt, Schrift 11 pt; die Handy-Fassung
-# setzt beides auf 14 (R/mobile.R).
-theme_srb <- function(base_size = 13, text_size = 11) {
+# Schriftgröße. Desktop: Abstände für 13 pt, Schrift 12 pt (die SVGs erscheinen in
+# Originalgröße, 12 pt ≈ 16 px); die Handy-Fassung setzt beides auf 14 (R/mobile.R).
+theme_srb <- function(base_size = 13, text_size = 12) {
   theme_minimal(base_size = base_size) %+replace%
     theme(
       plot.background   = element_rect(fill = "transparent", colour = NA),
@@ -34,12 +34,13 @@ theme_srb <- function(base_size = 13, text_size = 11) {
                                        margin = margin(b = 4)),
       plot.subtitle     = element_text(colour = srb_col[["muted"]], hjust = 0,
                                        margin = margin(b = 12)),
-      plot.caption      = element_text(colour = srb_col[["muted"]], size = rel(0.7),
-                                       hjust = 1, margin = margin(t = 10)),
+      plot.caption      = element_text(colour = srb_col[["muted"]], size = rel(0.8),
+                                       hjust = 0, lineheight = 1.15, margin = margin(t = 10)),
       plot.title.position = "plot",
       plot.caption.position = "plot",
       legend.position   = "top",
       legend.justification = "left",
+      legend.location   = "plot",   # Legende bündig mit dem Titel, nicht mit der Zeichenfläche
       legend.text       = element_text(colour = srb_col[["text"]]),
       legend.title      = element_blank(),
       # Facettentitel linksbündig wie Zwischenüberschriften, nicht zentriert
@@ -51,6 +52,23 @@ theme_srb <- function(base_size = 13, text_size = 11) {
 
 scale_fill_vote <- function(...) {
   scale_fill_manual(values = c(positiv = srb_col[["pos"]], negativ = srb_col[["neg"]]), ...)
+}
+
+# Quellenhinweis unter jeder Grafik mit Steam-Daten. index.qmd setzt den Text mit
+# Abrufdatum (options(srb.source = …)); ohne die Option bleibt nur der übrige Hinweis.
+with_source <- function(...) {
+  parts <- c(..., getOption("srb.source"))
+  if (length(parts)) paste(parts, collapse = "\n") else NULL
+}
+
+# Datumsachse: ein Strich pro Monat, deutsche Monatsnamen unabhängig von der
+# Spracheinstellung des Rechners („Apr. 2024“ statt „01.04.2024“ alle zwei Wochen)
+monate <- c("Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sept.",
+            "Okt.", "Nov.", "Dez.")
+scale_x_month <- function() {
+  scale_x_date(date_breaks = "1 month",
+               labels = \(d) ifelse(is.na(d), NA,
+                                    paste(monate[as.integer(format(d, "%m"))], format(d, "%Y"))))
 }
 
 # Deutsche Zahlenformate

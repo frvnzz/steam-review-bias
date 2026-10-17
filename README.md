@@ -92,6 +92,6 @@ Einmalig: im Repo unter **Settings → Pages → Build and deployment → Source
 
 Danach baut [`.github/workflows/publish.yml`](.github/workflows/publish.yml) bei jedem Push auf `main` die Seite mit `quarto-dev/quarto-actions` und veröffentlicht sie. Weil `execute: freeze: auto` gesetzt ist, läuft in der CI kein R: Sie baut die Seite aus `_freeze/`.
 
-**Wichtig:** Nach jeder Änderung an `index.qmd`, `R/` oder `data/` lokal `quarto render index.qmd` ausführen und `_freeze/` mit committen. Ein bloßes `quarto render` reicht dafür nicht: `freeze: auto` erkennt nur Änderungen an `index.qmd` selbst und würde sonst die alten Ergebnisse wiederverwenden. Das gilt auch für Grafik-Optionen in `_quarto.yml` (z. B. `fig-dpi`).
+**Wichtig:** Nach jeder Änderung an `index.qmd`, `R/` oder `data/` lokal `quarto render index.qmd` ausführen und `_freeze/` mit committen. Ein bloßes `quarto render` reicht dafür nicht: `freeze: auto` erkennt nur Änderungen an `index.qmd` selbst und würde sonst die alten Ergebnisse wiederverwenden. Das gilt auch für Grafik-Optionen in `_quarto.yml` (z. B. `fig-format`, `fig-width`).
 
 Die Action prüft das vor dem Bauen (auch bei Pull Requests): Passt `_freeze/` nicht zu `index.qmd` oder zum Fingerabdruck von `R/*.R` und `data/*.csv` (Chunk `freeze-fingerprint`), bricht sie mit einem Hinweis ab, statt veraltete Zahlen zu veröffentlichen.

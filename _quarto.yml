@@ -41,7 +41,10 @@ format:
       # nachdem lenis.min.js geladen ist (sonst springt die Seite am Handy sichtbar)
       - js/linear-layout.html   # schmal/niedrig: Grafiken zwischen die Absätze statt sticky
       - js/smooth-scroll.html
-    fig-dpi: 200
+    # SVG statt PNG: scharf in jeder Größe, ein Bruchteil der Dateigröße (vorher 200 dpi
+    # × Retina = ~3.000 px breite PNGs). svg() zeichnet Schrift als Umrisse, sieht also
+    # auf jedem Gerät gleich aus.
+    fig-format: svg
     fig-width: 7
     fig-height: 4.5
     fig-align: center

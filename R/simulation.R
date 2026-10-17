@@ -64,31 +64,48 @@ sim_summary <- function(prm = sim_params) {
   )
 }
 
+# Zufrieden/unzufrieden unterscheiden sich in Farbe UND Form (Kreis/Quadrat), damit
+# die Grafik auch ohne Farbsehen und im Graustufendruck funktioniert.
 # point_scale: Punktgröße relativ zur Desktop-Fassung (Handy: kleiner)
 plot_population <- function(s, highlight_reviewers = FALSE, point_scale = 1) {
   pop <- s$pop
-  p <- ggplot(pop, aes(x, y, fill = vote))
+  vote_labels <- c(positiv = "zufrieden", negativ = "unzufrieden")
+  p <- ggplot(pop, aes(x, y, fill = vote, shape = vote))
   if (highlight_reviewers) {
     p <- p +
-      geom_point(data = filter(pop, !reviews), shape = 21, size = 3.2 * point_scale, stroke = 0,
+      geom_point(data = filter(pop, !reviews), size = 3.2 * point_scale, stroke = 0,
                  alpha = 0.18) +
-      geom_point(data = filter(pop, reviews), shape = 21, size = 4.6 * point_scale, stroke = 1.1,
+      geom_point(data = filter(pop, reviews), size = 4.6 * point_scale, stroke = 1.1,
                  colour = srb_col[["bg"]])
   } else {
-    p <- p + geom_point(shape = 21, size = 4.2 * point_scale, stroke = 0.6, colour = srb_col[["bg"]])
+    p <- p + geom_point(size = 4.2 * point_scale, stroke = 0.6, colour = srb_col[["bg"]])
+  }
+  # Untertitel in beiden Fassungen: gleiche Höhe, beim Überblenden springt nichts
+  subtitle <- if (highlight_reviewers) {
+    "Groß: hat eine Review geschrieben. Blass: keine Review."
+  } else {
+    "Jeder Punkt ist eine Person."
   }
   p +
-    scale_fill_vote(labels = c(positiv = "zufrieden", negativ = "unzufrieden")) +
+    scale_fill_vote(labels = vote_labels) +
+    scale_shape_manual(values = c(positiv = 21, negativ = 22), labels = vote_labels) +
     coord_equal(clip = "off") +
+    labs(subtitle = subtitle) +
     theme_void(base_size = 13) +
     theme(
       plot.background = element_rect(fill = "transparent", colour = NA),
+      plot.subtitle = element_text(colour = srb_col[["muted"]], size = 12, hjust = 0,
+                                   margin = margin(b = 8)),
+      plot.title.position = "plot",
       legend.position = "top",
+      legend.justification = "left",
+      legend.location = "plot",
       legend.text = element_text(colour = srb_col[["text"]], size = 12),
       legend.title = element_blank(),
       plot.margin = margin(10, 10, 10, 10)
     ) +
-    guides(fill = guide_legend(override.aes = list(size = 5, alpha = 1)))
+    # eine gemeinsame Legende für Farbe und Form; override.aes nur einmal angeben
+    guides(fill = guide_legend(override.aes = list(size = 5, alpha = 1)), shape = guide_legend())
 }
 
 # stacked: Handy-Fassung – Beschriftung über jedem Balken statt links daneben,
@@ -110,9 +127,11 @@ plot_comparison <- function(s, stacked = FALSE) {
     geom_vline(xintercept = s$share_true, colour = srb_col[["text"]],
                linetype = "22", linewidth = 0.5) +
     geom_col(aes(fill = truth), width = 0.62) +
-    # Beschriftung innen am Balkenende: kollidiert so nie mit der gestrichelten Linie
-    geom_text(aes(label = fmt_pct(share)), hjust = 1.15, size = 5.2, fontface = "bold",
-              colour = "#ffffff") +
+    # Beschriftung innen am Balkenende: kollidiert so nie mit der gestrichelten Linie.
+    # Dunkle Schrift auf Blau (4,9:1), weiße auf Grau (5,2:1); Weiß auf Blau hätte nur 3,6:1
+    geom_text(aes(label = fmt_pct(share), colour = truth), hjust = 1.15, size = 5.2,
+              fontface = "bold") +
+    scale_colour_manual(values = c(`TRUE` = "#ffffff", `FALSE` = srb_col[["bg"]]), guide = "none") +
     scale_fill_manual(values = c(`TRUE` = srb_col[["grey"]], `FALSE` = srb_col[["pos"]]),
                       guide = "none") +
     scale_x_continuous(labels = \(x) fmt_pct(x), limits = c(0, 1),
