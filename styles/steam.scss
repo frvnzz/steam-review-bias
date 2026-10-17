@@ -71,7 +71,7 @@ body { background: $srb-bg; }
 .fig-caption,
 .prose table,
 .sample-cards,
-.callout-header,
+.data-note h3,
 .site-footer { font-family: $srb-sans; }
 
 // ---------- Titelblock ----------
@@ -131,15 +131,14 @@ main#quarto-document-content { margin-top: 0; }
   margin: clamp(4rem, 12svh, 8rem) 0 0;
   padding: 0 1.25rem;
 
-  // Pandoc packt die Kennzeile in ein eigenes <p>: dessen Abstand nach unten
-  // würde sie von der Überschrift lösen
-  > p:has(> .chapter-kicker) { margin-bottom: 0; }
-
+  // Kennzeile steht in der h2 (Screenreader hören „Kapitel 3 …“), sieht aber aus wie
+  // eine eigene Zeile darüber
   .chapter-kicker {
     display: block;
     color: $srb-muted;
     font-size: .95rem;
     font-weight: 600;
+    line-height: 1.6;
     letter-spacing: 0;
     text-transform: none;
     margin-bottom: .3rem;
@@ -287,20 +286,14 @@ main#quarto-document-content { margin-top: 0; }
   padding: 0 1.25rem 2rem;
 }
 
-.callout { border-radius: $srb-radius; }
-
-// „Unsere Daten“: ohne Farbstreifen und Symbol, nur oben und unten eine Linie.
-// .callout-titled: Quarto rückt den Text sonst für das (ausgeblendete) Symbol ein.
-.prose .callout.callout-style-simple {
-  border: 0;
-  border-block: 1px solid $srb-line;
-  border-radius: 0;
-  background: none;
+// „Unsere Daten“: Kasten nur mit einer Linie oben und unten, Titel als echte h3
+.prose .data-note {
+  margin: 1.25rem 0;
   padding: .9rem 0;
+  border-block: 1px solid $srb-line;
+
+  h3 { margin: 0 0 .5rem; font-size: 1rem; font-weight: 700; line-height: 1.5; }
 }
-.prose .callout .callout-icon-container { display: none; }
-.prose .callout.callout-titled.callout-style-simple .callout-body { padding-left: 0; font-size: 1rem; }
-.prose .callout.callout-style-simple > .callout-header { opacity: 1; font-size: 1rem; font-weight: 700; }
 
 // Ziffern gleich breit, damit Zahlen in Spalten untereinanderstehen
 .prose table, .sample-cards { font-variant-numeric: tabular-nums; }
@@ -462,11 +455,11 @@ html.srb-linear .cr-section {
 
   #quarto-document-content > .site-footer { padding-inline: $srb-mobile-gutter; }
 
-  // Tabellen notfalls horizontal scrollbar statt abgeschnitten
+  // Tabellen umbrechen statt horizontal zu scrollen: Ein Scrollbereich wäre in
+  // Safari per Tastatur nicht erreichbar
   .prose table {
-    display: block;
-    overflow-x: auto;
     font-size: .88rem;
+    th, td { overflow-wrap: anywhere; hyphens: auto; }
   }
 }
 

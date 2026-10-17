@@ -1,15 +1,30 @@
+<!-- Closeread schaltet mit der Taste „p“ einen Präsentationsmodus ein, der den ganzen
+     Text ausblendet (am Handy auch die Grafiken) – auch bei Strg/Cmd+P zum Drucken
+     und ohne sichtbaren Weg zurück. Die Taste wird hier abgefangen, bevor Closereads
+     Listener auf document sie sieht (Capture-Phase auf window). Das Drucken selbst
+     bleibt erlaubt: kein preventDefault. -->
+<script>
+window.addEventListener("keydown", function (e) {
+  if (e.key === "p" || e.key === "P") e.stopImmediatePropagation();
+}, true);
+</script>
+
 <!-- Lenis-Smooth-Scrolling (lokal eingebunden, kein CDN: js/vendor/lenis/, MIT-Lizenz).
      Lenis bewegt die echte Scrollposition, daher funktionieren position: sticky und
-     die Closeread-Trigger unverändert. Bei „Bewegung reduzieren“ bleibt natives Scrollen. -->
+     die Closeread-Trigger unverändert. Bei „Bewegung reduzieren“ bleibt natives Scrollen,
+     ebenso auf Touch-Geräten: Dort glättet Lenis nichts, die rAF-Schleife liefe umsonst. -->
 <link rel="stylesheet" href="js/vendor/lenis/lenis.css">
 <script src="js/vendor/lenis/lenis.min.js"></script>
 <script>
 (function () {
   if (typeof Lenis === "undefined") return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!window.matchMedia("(pointer: fine)").matches) return;
   window.lenis = new Lenis({
     lerp: 0.1,        // wie stark nachgeglättet wird (kleiner = weicher, träger)
-    anchors: true,    // Sprungmarken (#…) ebenfalls weich ansteuern
+    // Sprungmarken (#…) springt der Browser selbst an. Lenis würde den Sprung erst
+    // zurücknehmen und dann über alle Closeread-Schritte hinweg animieren.
+    anchors: false,
     autoRaf: true
   });
   // Closeread springt mit ← / → per scrollIntoView zum nächsten Schritt. Gleitet

@@ -26,6 +26,9 @@ format:
   closeread-html:
     theme: [darkly, styles/steam.scss]
     toc: false
+    # keine #-Anker an Überschriften: Screenreader lesen sonst „… Anchor“ mit,
+    # sie kosten zehn leere Tab-Stopps und verbreitern die Seite bei 320 px
+    anchor-sections: false
     smooth-scroll: false   # Lenis übernimmt (js/smooth-scroll.html)
     include-after-body:
       - js/smooth-scroll.html
