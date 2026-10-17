@@ -86,6 +86,16 @@ hd_filter_n <- D$daily |> filter(game == HD2) |> group_by(filter_offtopic) |> su
 stopifnot(nrow(hd_filter_n) == 2)   # mit und ohne Filter
 hd_filter_diff <- diff(hd_filter_n$n)
 off <- offtopic_stats(D$daily, BL2)
+# Rücknahme der PSN-Pflicht (offizielle Mitteilung vom 6. Mai 2024) teilt die Spitze
+hd_reversal <- as.Date("2024-05-06")
+hd_phase <- hd_daily |> filter(in_spike) |> group_by(after = date >= hd_reversal) |>
+  summarise(from = min(date), to = max(date), n = sum(n_total),
+            share = sum(n_positive) / sum(n_total))
+hd_before <- filter(hd_phase, !after); hd_after <- filter(hd_phase, after)
+stopifnot(nrow(hd_before) == 1, nrow(hd_after) == 1)
+hd_window <- filter(bombing_windows, slug == "helldivers2")
+# Steams „letzte 30 Tage“ zum Vergleich: dieselbe Spanne vor unserem Abruf
+hd_recent <- r |> filter(game == HD2, created > fetched - 30)
 hd_volume_title <- sprintf("%s: An %d Tagen kamen %s Reviews dazu", HD2, spike$n_days, fmt_num(spike$n_reviews))
 hd_share_title <- sprintf("%s: In den Spitzentagen waren nur %s positiv", HD2, fmt_pct(spike$share_pos))
 
@@ -187,7 +197,7 @@ cat("<!-- srb-inputs:",
 
 :::: {.cr-section}
 
-`r fmt_num(bg3$total_positive)` von `r fmt_num(bg3$total_reviews)` Reviews zu *Baldur's Gate 3* auf Steam sind positiv. Steam fasst das als „`r score_de(bg3$review_score_desc)`“ zusammen. Gezählt werden dabei nur Reviews von Leuten, die das Spiel über Steam gekauft haben. @cr-hook
+Über alle Sprachen gerechnet sind `r fmt_num(bg3$total_positive)` von `r fmt_num(bg3$total_reviews)` Reviews zu *Baldur's Gate 3* auf Steam positiv. Steam fasst das als „`r score_de(bg3$review_score_desc)`“ zusammen. Gezählt werden dabei nur Reviews von Leuten, die das Spiel über Steam gekauft haben. (Wer den Shop auf Deutsch öffnet, sieht oben inzwischen zuerst die Wertung der deutschsprachigen Reviews, mehr dazu in Kapitel 6.) @cr-hook
 
 Diese Zahl zeigt allerdings nur, wie die Menschen urteilen, die eine Review geschrieben haben. @cr-hook-n
 
@@ -433,7 +443,7 @@ print_mobile(plot_share_by_playtime(r))
 
 :::: {.cr-section}
 
-Steam verrät zu jeder Review auch, wie viele Reviews die Person insgesamt auf Steam geschrieben hat. `r fmt_pct(min(rv$prop[rv$bin == "1 Review"]))` bis `r fmt_pct(max(rv$prop[rv$bin == "1 Review"]))` der Reviews stammen von Personen, für die es die einzige Review überhaupt ist. Viel-Reviewer mit mehr als 100 Reviews machen nur `r fmt_pct(min(rv$prop[rv$bin == "> 100"]), 1)` bis `r fmt_pct(max(rv$prop[rv$bin == "> 100"]), 1)` aus. @cr-rv-mix
+Steam verrät zu jeder Review auch, wie viele öffentliche Reviews die Person insgesamt auf Steam geschrieben hat. `r fmt_pct(min(rv$prop[rv$bin == "1 Review"]))` bis `r fmt_pct(max(rv$prop[rv$bin == "1 Review"]))` der Reviews stammen von Personen, für die es die einzige Review überhaupt ist. Viel-Reviewer mit mehr als 100 Reviews machen nur `r fmt_pct(min(rv$prop[rv$bin == "> 100"]), 1)` bis `r fmt_pct(max(rv$prop[rv$bin == "> 100"]), 1)` aus. @cr-rv-mix
 
 Die beiden Gruppen urteilen unterschiedlich. Bei *Baldur's Gate 3* sind `r fmt_pct(value_for(rv, BG3, "share", bin == "1 Review"))` der Reviews von Einmal-Reviewern positiv, von Viel-Reviewern nur `r fmt_pct(value_for(rv, BG3, "share", bin == "> 100"))`. Bei *Hades* sind es `r fmt_pct(value_for(rv, HADES, "share", bin == "1 Review"))` gegenüber `r fmt_pct(value_for(rv, HADES, "share", bin == "> 100"))`, bei *Helldivers 2* liegen die Werte bei `r fmt_pct(value_for(rv, HD2, "share", bin == "1 Review"))` und `r fmt_pct(value_for(rv, HD2, "share", bin == "> 100"))`. @cr-rv-share
 
@@ -494,17 +504,17 @@ print_mobile(plot_reviewer_share(r))
 
 :::: {.cr-section}
 
-An einem normalen Tag im Frühjahr 2024 bekam *Helldivers 2* rund `r fmt_num(spike$baseline)` neue Reviews (Median vom `r fmt_date(spike$base_from)` bis `r fmt_date(spike$base_to)`). Ab dem `r fmt_date(min(spike$days))` waren es bis zu `r fmt_num(spike$max_n)` an einem einzigen Tag (`r fmt_date(spike$max_day)`). @cr-hd-volume
+An einem normalen Tag im Frühjahr 2024 bekam *Helldivers 2* rund `r fmt_num(spike$baseline)` neue Reviews (Median vom `r fmt_date(spike$base_from)` bis `r fmt_date(spike$base_to)`). Als Spitze zählen wir jeden Tag mit mehr als `r spike_factor`-mal so vielen Reviews. Ab dem `r fmt_date(min(spike$days))` waren es bis zu `r fmt_num(spike$max_n)` an einem einzigen Tag (`r fmt_date(spike$max_day)`). @cr-hd-volume
 
-An nur `r spike$n_days` Tagen entstanden `r fmt_num(spike$n_reviews)` Reviews. Das sind `r fmt_pct(spike$n_reviews / hd$total_reviews_all)` aller Reviews, die das Spiel bis heute hat. So einen Ansturm nennt man **Review-Bombing**: Laut Steamworks-Dokumentation nutzen dabei viele Spieler:innen Reviews, um ihren Unmut auszudrücken, die Wertung zu drücken und eine Reaktion zu erzwingen. @cr-hd-volume
+An nur `r spike$n_days` Tagen entstanden `r fmt_num(spike$n_reviews)` Reviews. Das sind `r fmt_pct(spike$n_reviews / hd$total_reviews_all)` aller Reviews, die das Spiel bis heute hat. So einen Ansturm nennt man **Review-Bombing**: Laut Steamworks-Dokumentation nutzen dabei viele Spieler:innen Reviews, um ihren Unmut auszudrücken, die Wertung zu drücken und eine Reaktion zu erzwingen. Anlass war eine Ankündigung von Sony: Wer *Helldivers 2* auf dem PC spielt, sollte ein PlayStation-Network-Konto verknüpfen müssen, das es in vielen Ländern gar nicht gibt. Am `r fmt_date(hd_reversal)` nahm Sony das zurück. @cr-hd-volume
 
-In diesen Tagen waren zusammengerechnet `r fmt_pct(spike$share_pos)` der Reviews positiv, im genannten Vergleichszeitraum `r fmt_pct(spike$share_pos_base)`. Diese Werte sind mit Vorsicht zu lesen, denn die Schnittstelle liefert jede Review so, wie sie heute aussieht. Reviews aus jenen Tagen können später geändert worden sein, gelöschte fehlen ganz. Wie die Stimmung damals war, lässt sich so nicht exakt rekonstruieren. @cr-hd-share
+In diesen Tagen waren zusammengerechnet `r fmt_pct(spike$share_pos)` der Reviews positiv, im genannten Vergleichszeitraum `r fmt_pct(spike$share_pos_base)`. Dahinter stecken zwei Phasen: Vom `r fmt_date(hd_before$from)` bis `r fmt_date(hd_before$to)` sind nur `r fmt_pct(hd_before$share)` der Reviews positiv, vom `r fmt_date(hd_after$from)` bis `r fmt_date(hd_after$to)`, nach der Rücknahme, `r fmt_pct(hd_after$share)`. Diese Werte sind mit Vorsicht zu lesen, denn die Schnittstelle liefert jede Review so, wie sie heute aussieht. Reviews aus jenen Tagen können später geändert worden sein, gelöschte fehlen ganz. Wie die Stimmung damals war, lässt sich so nicht exakt rekonstruieren. @cr-hd-share
 
-Ob wir Steams Off-Topic-Filter einschalten oder nicht, macht bei *Helldivers 2* `r if (hd_filter_diff == 0) "**keinen** Unterschied; keine einzige Review wird ausgeblendet" else paste("einen Unterschied von", fmt_num(abs(hd_filter_diff)), "Reviews")`. Die Phase wird also nicht herausgefiltert und zählt in Steams Wertung „`r score_de(hd$review_score_desc)`“ (`r fmt_pct(hd$share_pos)` positiv) mit. Über alle Kaufarten gerechnet sind `r fmt_pct(hd$share_pos_all)` der Reviews positiv, ohne die `r spike$n_days` Spitzentage wären es `r fmt_pct(hd_without_spike)`. @cr-hd-share
+Ob wir Steams Off-Topic-Filter einschalten oder nicht, macht bei *Helldivers 2* vom `r fmt_date(hd_window$start)` bis `r fmt_date(hd_window$end)` `r if (hd_filter_diff == 0) "**keinen** Unterschied; keine einzige Review wird ausgeblendet" else paste("einen Unterschied von", fmt_num(abs(hd_filter_diff)), "Reviews")`. Die Phase wird also nicht herausgefiltert und zählt in Steams Wertung über alle Sprachen („`r score_de(hd$review_score_desc)`“, `r fmt_pct(hd$share_pos)` positiv) mit. Über alle Kaufarten gerechnet sind `r fmt_pct(hd$share_pos_all)` der Reviews positiv, ohne die `r spike$n_days` Spitzentage wären es `r fmt_pct(hd_without_spike)`. @cr-hd-share
 
-Ganz anders bei *Borderlands 2* im Frühjahr 2019: Valve hat die damalige Review-Welle als „off-topic“ eingestuft. Vom `r fmt_date(off$from)` bis `r fmt_date(off$to)` liefert die Standardabfrage null Reviews. Erst mit `filter_offtopic_activity = false` tauchen `r fmt_num(off$n_hidden)` Reviews auf, `r fmt_pct(off$share_neg_hidden)` davon negativ. @cr-bl-offtopic
+Ganz anders bei *Borderlands 2* im Frühjahr 2019. Anlass der Review-Welle war die Ankündigung, dass der Nachfolger *Borderlands 3* zunächst nur im Epic Games Store erscheint. Valve hat die Welle als „off-topic“ eingestuft, *Borderlands 2* war das erste Spiel, bei dem Steam das tat. Vom `r fmt_date(off$from)` bis `r fmt_date(off$to)` liefert die Standardabfrage null Reviews. Erst mit `filter_offtopic_activity = false` tauchen `r fmt_num(off$n_hidden)` Reviews auf, `r fmt_pct(off$share_neg_hidden)` davon negativ. @cr-bl-offtopic
 
-Steam blendet dabei den ganzen Zeitraum aus, auch die positiven Reviews. Laut Steamworks-Dokumentation zählen Reviews aus solchen Off-Topic-Phasen nicht zur Gesamtwertung. Was als „off-topic“ gilt, entscheidet Valve. Kritik an Geschäftspraktiken nennt die Dokumentation dabei ausdrücklich als legitimen Grund für eine Review. Die Plattform entscheidet also selbst mit, welche Stimmen in die Zahl eingehen. @cr-bl-offtopic
+Steam blendet dabei den ganzen Zeitraum aus, auch die positiven Reviews: `r fmt_pct(1 - off$share_neg_hidden)` der ausgeblendeten Reviews sind positiv. Laut Steamworks-Dokumentation zählen Reviews aus solchen Off-Topic-Phasen nicht zur Gesamtwertung. Was als „off-topic“ gilt, entscheidet Valve. Dabei nennt die Dokumentation Kritik an Geschäftspraktiken, wie hier an der Exklusivität bei Epic, ausdrücklich als legitimen Grund für eine Review. Die Plattform entscheidet also selbst mit, welche Stimmen in die Zahl eingehen. @cr-bl-offtopic
 
 ::: {#cr-hd-volume}
 ::: {.d-none .d-md-block}
@@ -581,7 +591,7 @@ print_mobile(plot_offtopic(D$daily, BL2, short_legend = TRUE))
 
 :::: {.cr-section}
 
-Steam speichert zu jeder Review noch mehr, zum Beispiel ob das Spiel auf Steam gekauft, kostenlos erhalten oder später zurückgegeben wurde und ob es meist auf dem Steam Deck lief. In der Grafik zeigt jeder Punkt den Anteil positiver Reviews in einer Gruppe, der Strich das 95-%-Unsicherheitsintervall. @cr-factors
+Steam speichert zu jeder Review noch mehr, zum Beispiel ob das Spiel auf Steam gekauft oder später zurückgegeben wurde und ob es meist auf dem Steam Deck lief. Außerdem können die Autor:innen angeben, dass sie das Spiel kostenlos erhalten haben. In der Grafik zeigt jeder Punkt den Anteil positiver Reviews in einer Gruppe, der Strich das 95-%-Unsicherheitsintervall. @cr-factors
 
 Am deutlichsten weichen Reviews zu Spielen ab, die später zurückgegeben wurden. Sie sind nur zu `r fmt_pct(min(refunded_shown$share))` bis `r fmt_pct(max(refunded_shown$share))` positiv. Allerdings sind das nur `r fmt_num(min(refunded_shown$n))` bis `r fmt_num(max(refunded_shown$n))` Reviews pro Spiel, entsprechend breit sind die Intervalle`r if (nrow(refunded_hidden)) paste0(". Bei *", paste(refunded_hidden$game, collapse = "* und *"), "* sind es nur ", fmt_num(sum(refunded_hidden$n)), ", zu wenige, um sie darzustellen") else ""`. @cr-factors
 
@@ -593,7 +603,7 @@ Für die angezeigte Wertung ist der Kaufweg trotzdem entscheidend: Steam zählt 
 
 Deutliche Unterschiede gibt es dagegen zwischen Sprachen: Bei *Helldivers 2* reicht der Anteil positiver Reviews von `r fmt_pct(lang_range[[HD2]]$hi$share)` (`r lang_range[[HD2]]$hi$name`) bis `r fmt_pct(lang_range[[HD2]]$lo$share)` (`r lang_range[[HD2]]$lo$name`), bei *Hades* von `r fmt_pct(lang_range[[HADES]]$hi$share)` (`r lang_range[[HADES]]$hi$name`) bis `r fmt_pct(lang_range[[HADES]]$lo$share)` (`r lang_range[[HADES]]$lo$name`). @cr-lang
 
-Die Gesamtwertung auf der Shop-Seite mischt all diese Gruppen. Woran die Unterschiede zwischen den Sprachgruppen liegen, etwa an Erwartungen oder Servern, verraten die Daten nicht. Sie zeigen aber, dass sich die Zahl verschiebt, je nachdem, wer schreibt. @cr-lang
+Steam reagiert inzwischen selbst darauf: Seit August 2025 steht oben auf der Shop-Seite die Wertung aus den Reviews in der eigenen Sprache, sobald ein Spiel rund 2.000 Reviews hat und mindestens 200 davon in dieser Sprache. Valve begründet das mit Übersetzungen, kulturellen Bezügen und regional unterschiedlichen Erfahrungen, etwa durch schlechte Verbindungen. Erst die Wertung über alle Sprachen mischt alle Gruppen. Sie lässt sich weiterhin anzeigen und in den Shop-Einstellungen wieder als Standard wählen. Woran die Unterschiede zwischen den Sprachgruppen liegen, verraten unsere Daten nicht. Sie zeigen aber, dass sich die Zahl verschiebt, je nachdem, wer schreibt. @cr-lang
 
 ::: {#cr-factors}
 ::: {.d-none .d-md-block}
@@ -648,9 +658,9 @@ print_mobile(plot_languages_mobile(r))
 
 ::: {.prose .takeaways}
 1. **„X % positiv“ gilt nur für die Leute, die eine Review geschrieben haben.** Die stille Mehrheit fehlt immer, und ob sie zufriedener oder unzufriedener ist, weiß niemand.
-2. **Schau auch auf den Zeitpunkt.** Steam zeigt neben der Gesamtwertung die Wertung der letzten 30 Tage, und beide können weit auseinanderliegen: Bei *Helldivers 2* sind insgesamt `r fmt_pct(hd$share_pos_all)` der Reviews positiv, in unserer Stichprobe der neuesten Reviews `r fmt_pct(value_for(sample_info, HD2, "share"))`. Plötzliche Ausschläge im Review-Verlauf können auf Review-Bombing hinweisen.
+2. **Schau auch auf den Zeitpunkt.** Steam zeigt neben der Gesamtwertung die Wertung der letzten 30 Tage, und beide können weit auseinanderliegen: Bei *Helldivers 2* sind insgesamt `r fmt_pct(hd$share_pos_all)` der Reviews positiv, in den 30 Tagen vor unserem Abruf `r fmt_pct(mean(hd_recent$voted_up))`. Die Gesamtzahl trägt bis heute das Review-Bombing von 2024 mit. Plötzliche Ausschläge im Review-Verlauf können auf Review-Bombing hinweisen.
 3. **Achte darauf, nach wie vielen Stunden jemand bewertet hat.** Ein Urteil nach 30 Minuten und eines nach 300 Stunden messen Verschiedenes.
-4. **Wer schreibt, verschiebt die Zahl.** Einmal-Reviewer, Viel-Reviewer und verschiedene Sprachgruppen urteilen unterschiedlich, und die Gesamtwertung mischt sie alle.
+4. **Wer schreibt, verschiebt die Zahl.** Einmal-Reviewer, Viel-Reviewer und verschiedene Sprachgruppen urteilen unterschiedlich. Oben auf der Shop-Seite steht seit 2025 zuerst die Wertung in deiner Sprache, die Wertung über alle Sprachen kann davon deutlich abweichen.
 5. **Wenige Reviews, wenig Gewissheit.** Ein auffälliger Prozentwert aus 30 Reviews ist viel weniger belastbar als einer aus 3.000.
 6. **Steam filtert mit.** Als „off-topic“ eingestufte Phasen fehlen in der Gesamtwertung, andere Review-Wellen zählen voll, und Reviews zu Keys, die nicht über Steam gekauft wurden, zählen gar nicht.
 :::
@@ -701,6 +711,7 @@ Code, bereinigte Daten und eine Anleitung zum Nachvollziehen der Analyse: <https
 - Steamworks-Dokumentation: *IUserReviewsService* (GetAppReviews). <https://partner.steamgames.com/doc/webapi/IUserReviewsService>, abgerufen am `r fmt_date(docs_accessed)`.
 - Steamworks-Dokumentation: *[User Reviews – Get List]{lang="en"}* (veraltet). <https://partner.steamgames.com/doc/store/getreviews>, abgerufen am `r fmt_date(docs_accessed)`.
 - Steamworks-Dokumentation: *[User Reviews]{lang="en"}*, Abschnitt „[Review Bombing]{lang="en"}“. <https://partner.steamgames.com/doc/store/reviews>, abgerufen am `r fmt_date(docs_accessed)`.
+- Steam News: *[Updates to User Review Scores Based on Language]{lang="en"}*, 18.08.2025. <https://store.steampowered.com/news/app/593110/view/500579345320904529>, abgerufen am 17.10.2026.
 - Steam: *Steam-Rückerstattungen*. <https://store.steampowered.com/steam_refunds/>, abgerufen am `r fmt_date(docs_accessed)`.
 - Datenendpunkt: `https://api.steampowered.com/IUserReviewsService/GetAppReviews/v1/`, Daten abgerufen am `r fmt_date(fetched)`.
 - Wilson, E. B. (1927). [Probable Inference, the Law of Succession, and Statistical Inference. *Journal of the American Statistical Association*]{lang="en"}, 22(158), 209–212.
