@@ -25,7 +25,10 @@ games <- data.frame(
 
 # Obergrenze pro Spiel: die neuesten N Reviews (filter = Recent).
 # Überschreibbar per Umgebungsvariable, z. B. SRB_MAX_REVIEWS=2000.
-max_reviews <- as.integer(Sys.getenv("SRB_MAX_REVIEWS", "10000"))
+max_reviews <- suppressWarnings(as.integer(Sys.getenv("SRB_MAX_REVIEWS", "10000")))
+if (is.na(max_reviews) || max_reviews < 1) {
+  stop("SRB_MAX_REVIEWS muss eine positive ganze Zahl sein.", call. = FALSE)
+}
 
 # Zeitfenster für die täglichen Zählungen (Kapitel 5), jeweils mit und ohne
 # Off-Topic-Filter. Borderlands 2 dient nur als Beispiel für ein von Valve
@@ -52,7 +55,10 @@ REVIEW_TYPE_POS    <- 1L
 PURCHASE_TYPE_STEAM <- 0L   # nur Käufe über Steam: Grundlage von Steams angezeigter Wertung
 PURCHASE_TYPE_ALL  <- 1L    # alle Kaufarten (auch aktivierte Keys)
 
-get_reviews_page <- function(params) {
+# keep_reviews = FALSE: Für Zählungen braucht es nur die Summen. Die Schnittstelle
+# liefert trotzdem mindestens eine Review mit (inkl. Text und steamid); die wird
+# vor dem Speichern entfernt.
+get_reviews_page <- function(params, keep_reviews = TRUE) {
   input_json <- as.character(toJSON(params, auto_unbox = TRUE))
   key <- as.character(openssl::md5(input_json))
   path <- file.path(cache_dir, paste0(key, ".json"))
@@ -69,19 +75,30 @@ get_reviews_page <- function(params) {
     req_retry(
       max_tries = 6,
       is_transient = \(r) resp_status(r) %in% c(429, 500, 502, 503, 504),
+      retry_on_failure = TRUE,   # auch Timeouts und Verbindungsabbrüche
       backoff = \(i) min(120, 5 * 2^(i - 1))   # 5, 10, 20, 40, 80 s
     ) |>
     req_perform()
 
   body <- resp_body_json(resp)
+  # Leere oder fehlerhafte Antworten nicht cachen: Sonst würde jeder spätere Lauf
+  # sie wiederverwenden, und aus einem Fehler würde still eine 0
+  if (!is.list(body$response) || length(body$response) == 0) {
+    stop("Leere Antwort von Steam für ", input_json, call. = FALSE)
+  }
+  if (!keep_reviews) body$response$reviews <- NULL
   out <- list(
     request    = params,
     fetched_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z"),
     response   = body$response
   )
+  # erst in eine Temp-Datei, dann umbenennen: Ein Abbruch mitten im Schreiben
+  # hinterlässt so keine halbe JSON-Datei, an der jeder weitere Lauf scheitert
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-  writeLines(as.character(toJSON(out, auto_unbox = TRUE, null = "null", digits = NA)), path,
+  tmp <- tempfile(tmpdir = cache_dir, fileext = ".tmp")
+  writeLines(as.character(toJSON(out, auto_unbox = TRUE, null = "null", digits = NA)), tmp,
              useBytes = TRUE)
+  file.rename(tmp, path)
   out
 }
 
@@ -124,19 +141,26 @@ fetch_recent_reviews <- function(appid, max_n = max_reviews, per_page = 100L,
 
 day_start_utc <- function(d) as.integer(as.POSIXct(paste(d, "00:00:00"), tz = "UTC"))
 
-count_reviews <- function(appid, from, to, review_type, filter_offtopic) {
+# Alle und positive Reviews eines Zeitraums aus einer einzigen Anfrage:
+# total_matching zählt alle Treffer, query_summary$total_positive die positiven
+count_reviews <- function(appid, from, to, filter_offtopic) {
   page <- get_reviews_page(list(
     appid = appid,
     filter = FILTER_RECENT,
     languages = list("all"),
-    review_type = review_type,
+    review_type = REVIEW_TYPE_ALL,
     purchase_type = PURCHASE_TYPE_ALL,
     num_per_page = 1L,
     filter_offtopic_activity = filter_offtopic,
     date_range_start = from,
     date_range_end = to
-  ))
-  page$response$total_matching %||% 0L
+  ), keep_reviews = FALSE)
+  n <- c(total = page$response$total_matching,
+         positive = page$response$query_summary$total_positive)
+  if (length(n) != 2 || !is.numeric(n)) {
+    stop("Antwort ohne total_matching/total_positive für app ", appid, call. = FALSE)
+  }
+  n
 }
 
 fetch_daily_counts <- function(appid, start, end) {
@@ -149,8 +173,9 @@ fetch_daily_counts <- function(appid, start, end) {
   for (i in seq_len(nrow(grid))) {
     from <- day_start_utc(grid$date[i])
     to   <- day_start_utc(grid$date[i] + 1) - 1L
-    grid$n_total[i]    <- count_reviews(appid, from, to, REVIEW_TYPE_ALL, grid$filter_offtopic[i])
-    grid$n_positive[i] <- count_reviews(appid, from, to, REVIEW_TYPE_POS, grid$filter_offtopic[i])
+    n <- count_reviews(appid, from, to, grid$filter_offtopic[i])
+    grid$n_total[i]    <- n[["total"]]
+    grid$n_positive[i] <- n[["positive"]]
     if (i %% 20 == 0) message(sprintf("  app %d: %d/%d Tage", appid, i, nrow(grid)))
   }
   grid$appid <- appid
@@ -168,8 +193,12 @@ query_summary <- function(appid, purchase_type) {
     purchase_type = purchase_type,
     num_per_page = 1L,
     cursor = "*"
-  ))
-  c(page$response$query_summary, fetched_at = page$fetched_at)
+  ), keep_reviews = FALSE)
+  qs <- page$response$query_summary
+  if (!is.numeric(qs$total_reviews)) {
+    stop("Antwort ohne query_summary für app ", appid, call. = FALSE)
+  }
+  qs
 }
 
 # Steams Wertung im Shop zählt laut Steamworks-Doku nur Reviews von Steam-Käufen
@@ -178,7 +207,7 @@ query_summary <- function(appid, purchase_type) {
 fetch_summary <- function(appid) {
   st <- query_summary(appid, PURCHASE_TYPE_STEAM)
   al <- query_summary(appid, PURCHASE_TYPE_ALL)
-  data.frame(appid = appid, fetched_at = st$fetched_at,
+  data.frame(appid = appid,
              review_score_desc = st$review_score_desc,
              total_positive = st$total_positive, total_negative = st$total_negative,
              total_reviews = st$total_reviews,
@@ -189,6 +218,7 @@ fetch_summary <- function(appid) {
 # ---- Hauptprogramm ----------------------------------------------------------
 
 main <- function(test = FALSE) {
+  if (!file.exists("_quarto.yml")) stop("Bitte im Projektordner ausführen.", call. = FALSE)
   dir.create("data-raw", showWarnings = FALSE)
 
   if (test) {
@@ -220,5 +250,9 @@ main <- function(test = FALSE) {
 }
 
 if (sys.nframe() == 0L) {
-  main(test = "--test" %in% commandArgs(trailingOnly = TRUE))
+  args <- commandArgs(trailingOnly = TRUE)
+  # Tippfehler wie --tset sollen nicht den vollständigen Abruf starten
+  unknown <- setdiff(args, "--test")
+  if (length(unknown)) stop("Unbekannte Option: ", paste(unknown, collapse = " "), call. = FALSE)
+  main(test = "--test" %in% args)
 }

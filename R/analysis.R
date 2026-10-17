@@ -8,22 +8,32 @@ library(ggplot2)
 
 # ---- Daten ------------------------------------------------------------------
 
+# Spaltentypen fest vorgegeben: Ändert sich das Format der Daten, fällt das hier auf
+# statt als still falsch geratener Typ (readr warnt bei Abweichungen)
 load_data <- function() {
-  reviews <- read_csv("data/reviews_sample.csv", show_col_types = FALSE) |>
+  reviews <- read_csv("data/reviews_sample.csv",
+                      col_types = cols(game = "c", language = "c", created = "D",
+                                       appid = "i", author_num_reviews = "i",
+                                       playtime_at_review_min = "i", playtime_forever_min = "i",
+                                       .default = "l")) |>
     mutate(
       vote = factor(if_else(voted_up, "positiv", "negativ"), levels = c("positiv", "negativ")),
       playtime_h = playtime_at_review_min / 60,
       game = factor(game, levels = c("Baldur's Gate 3", "Hades", "Helldivers 2"))
     )
-  meta <- read_csv("data/meta.csv", show_col_types = FALSE)
+  meta <- read_csv("data/meta.csv", col_types = cols(.default = "c"))
   list(
     reviews   = reviews,
     # share_pos: nur Steam-Käufe, wie in Steams Wertung; share_pos_all: alle Kaufarten,
     # vergleichbar mit Stichprobe und Tageswerten
-    summaries = read_csv("data/summaries.csv", show_col_types = FALSE) |>
+    summaries = read_csv("data/summaries.csv",
+                         col_types = cols(review_score_desc = "c", game = "c", role = "c",
+                                          .default = "i")) |>
       mutate(share_pos = total_positive / total_reviews,
              share_pos_all = total_positive_all / total_reviews_all),
-    daily     = read_csv("data/daily_counts.csv", show_col_types = FALSE) |>
+    daily     = read_csv("data/daily_counts.csv",
+                         col_types = cols(game = "c", date = "D", filter_offtopic = "l",
+                                          .default = "i")) |>
       mutate(share_pos = n_positive / n_total),
     meta      = setNames(meta$value, meta$key)
   )

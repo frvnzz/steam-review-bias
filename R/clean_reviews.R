@@ -2,7 +2,8 @@
 #
 # Entfernt werden: steamid, recommendationid, Review-Text, Antwort der Entwickler:innen
 # und exakte Zeitstempel (auf den Tag gerundet). Übrig bleiben nur Merkmale,
-# die für die Analyse gebraucht werden.
+# die für die Analyse gebraucht werden – jede weitere Spalte macht es leichter,
+# eine Zeile der öffentlichen Review (und damit dem Konto) zuzuordnen.
 #
 # Aufruf: Rscript R/clean_reviews.R
 
@@ -14,23 +15,22 @@ source("R/fetch_reviews.R")   # für `games` und `bombing_windows`
 
 as_date_utc <- function(ts) as.Date(as.POSIXct(ts, origin = "1970-01-01", tz = "UTC"))
 
+# Fehlt ein Ja/Nein-Feld, bleibt es NA statt still zu FALSE zu werden
+# (ein fehlendes voted_up wäre sonst eine „negative“ Review); main() prüft das.
+flag <- function(x) if (is.null(x)) NA else as.logical(x)
+
 flatten_review <- function(r) {
   a <- r$author
   tibble(
     recommendationid        = r$recommendationid,   # nur zum Deduplizieren, wird entfernt
     language                = r$language,
     created                 = as_date_utc(r$timestamp_created),
-    updated                 = as_date_utc(r$timestamp_updated),
-    voted_up                = isTRUE(r$voted_up),
-    votes_up                = r$votes_up %||% NA_integer_,
-    votes_funny             = r$votes_funny %||% NA_integer_,
-    comment_count           = r$comment_count %||% NA_integer_,
-    steam_purchase          = isTRUE(r$steam_purchase),
-    received_for_free       = isTRUE(r$received_for_free),
-    early_access            = isTRUE(r$written_during_early_access),
-    primarily_steam_deck    = isTRUE(r$primarily_steam_deck),
-    refunded                = isTRUE(r$refunded),
-    has_dev_response        = !is.null(r$developer_response),
+    voted_up                = flag(r$voted_up),
+    steam_purchase          = flag(r$steam_purchase),
+    received_for_free       = flag(r$received_for_free),
+    early_access            = flag(r$written_during_early_access),
+    primarily_steam_deck    = flag(r$primarily_steam_deck),
+    refunded                = flag(r$refunded),
     author_num_reviews      = a$num_reviews %||% NA_integer_,
     playtime_at_review_min  = a$playtime_at_review %||% NA_integer_,
     playtime_forever_min    = a$playtime_forever %||% NA_integer_
@@ -56,6 +56,7 @@ clean_game <- function(appid) {
 }
 
 main <- function() {
+  if (!file.exists("_quarto.yml")) stop("Bitte im Projektordner ausführen.", call. = FALSE)
   dir.create("data", showWarnings = FALSE)
 
   reviews <- map(games$appid, clean_game)
@@ -63,9 +64,17 @@ main <- function() {
   reviews <- list_rbind(reviews) |>
     left_join(select(games, appid, game = name), by = "appid") |>
     relocate(game, .after = appid)
+  flags <- c("voted_up", "steam_purchase", "received_for_free", "early_access",
+             "primarily_steam_deck", "refunded")
+  missing <- colSums(is.na(reviews[flags]))
+  if (any(missing > 0)) {
+    stop("Fehlende Ja/Nein-Werte in den Rohdaten: ",
+         paste(names(missing)[missing > 0], collapse = ", "), call. = FALSE)
+  }
   write_csv(reviews, "data/reviews_sample.csv")
 
   summaries <- readRDS(file.path("data-raw", "summaries.rds")) |>
+    select(-any_of("fetched_at")) |>   # ältere Abrufe: Zeitstempel mit lokaler Zeitzone
     left_join(select(games, appid, game = name, role), by = "appid")
   write_csv(summaries, "data/summaries.csv")
 
@@ -75,11 +84,12 @@ main <- function() {
     relocate(appid, game)
   write_csv(daily, "data/daily_counts.csv")
 
-  # Abrufzeitpunkt für die Quellenangaben auf der Seite
+  # Abrufzeitpunkt für die Quellenangaben auf der Seite. (Die Stichprobengröße
+  # zählt die Seite selbst aus reviews_sample.csv: SRB_MAX_REVIEWS gilt beim Abruf,
+  # nicht unbedingt beim Bereinigen, und ein Spiel kann weniger Reviews haben.)
   meta <- tibble(
-    key = c("fetched_from", "fetched_to", "max_reviews"),
-    value = c(format(min(fetched), "%Y-%m-%d"), format(max(fetched), "%Y-%m-%d"),
-              as.character(max_reviews))
+    key = c("fetched_from", "fetched_to"),
+    value = c(format(min(fetched), "%Y-%m-%d"), format(max(fetched), "%Y-%m-%d"))
   )
   write_csv(meta, "data/meta.csv")
 

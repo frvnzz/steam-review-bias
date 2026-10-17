@@ -46,6 +46,10 @@ sample_info <- r |>
   summarise(n = n(), from = min(created), to = max(created), share = mean(voted_up), .groups = "drop") |>
   # alle Kaufarten: wie die Stichprobe (Steams Wertung zählt nur Steam-Käufe, s. Kapitel 1/6)
   left_join(select(summ, game, appid, total_reviews = total_reviews_all, all_share = share_pos_all), by = "game")
+# Stichprobengröße aus den Daten, nicht aus der Abruf-Einstellung (ein Spiel kann
+# weniger Reviews haben als die Obergrenze)
+sample_n <- if (n_distinct(sample_info$n) == 1) fmt_num(sample_info$n[1]) else
+  paste("bis zu", fmt_num(max(sample_info$n)))
 
 # Kapitel 3
 pt <- playtime_stats(r)
@@ -286,7 +290,7 @@ print_mobile(plot_comparison(sim, stacked = TRUE))
 ::: {.data-note}
 ### Unsere Daten
 
-Für die folgenden Kapitel haben wir über die offizielle Steam-Schnittstelle je Spiel die `r fmt_num(as.integer(D$meta[["max_reviews"]]))` neuesten Reviews abgerufen (Stand: `r fmt_date(fetched)`). Die Stichprobe ist nicht zufällig gezogen, sie zeigt nur die letzten Wochen bzw. Monate. Beide Spalten umfassen alle Kaufarten, Steams angezeigte Wertung zählt dagegen nur Steam-Käufe (mehr dazu in Kapitel 6):
+Für die folgenden Kapitel haben wir über die offizielle Steam-Schnittstelle je Spiel die `r sample_n` neuesten Reviews abgerufen (Stand: `r fmt_date(fetched)`). Die Stichprobe ist nicht zufällig gezogen, sie zeigt nur die letzten Wochen bzw. Monate. Beide Spalten umfassen alle Kaufarten, Steams angezeigte Wertung zählt dagegen nur Steam-Käufe (mehr dazu in Kapitel 6):
 
 ::: {.d-none .d-md-block}
 ```{r}
@@ -621,7 +625,7 @@ print_mobile(plot_languages_mobile(r))
 
 ::: {.prose}
 - Die Nicht-Reviewer sehen wir nie. Deshalb können wir nicht sagen, wie groß der Selektionsbias bei echten Spielen ist oder in welche Richtung er geht. Wir können nur zeigen, dass Reviewer-Gruppen sich unterscheiden.
-- Unsere Stichprobe ist nicht zufällig: Es sind die jeweils `r fmt_num(as.integer(D$meta[["max_reviews"]]))` neuesten Reviews. Sie decken nur die letzten Wochen bzw. Monate ab (siehe Tabelle oben), nicht die gesamte Zeit seit Erscheinen der Spiele.
+- Unsere Stichprobe ist nicht zufällig: Es sind die jeweils `r sample_n` neuesten Reviews. Sie decken nur die letzten Wochen bzw. Monate ab (siehe Tabelle oben), nicht die gesamte Zeit seit Erscheinen der Spiele.
 - Alle Werte geben den heutigen Stand wieder. Positiv/negativ, die Zahl der Reviews pro Person und die Gesamtspielzeit sind Werte vom Abruftag. Geänderte Reviews erscheinen in ihrer neuen Fassung, gelöschte fehlen.
 - Unterschiede zwischen Gruppen (Spielzeit, Sprache, Viel-Reviewer) belegen keine Ursache. Sie können viele Gründe haben, die wir nicht messen.
 - Die Unsicherheitsintervalle sind 95-%-Wilson-Intervalle und behandeln Reviews als unabhängig. Bei Review-Wellen, in denen sich viele gegenseitig beeinflussen, ist das nur eine Näherung.
@@ -639,8 +643,8 @@ print_mobile(plot_languages_mobile(r))
 
 Alle Daten stammen vom offiziellen Steam-Endpunkt `IUserReviewsService/GetAppReviews` (Daten abgerufen am `r fmt_date(fetched)`). Der früher dokumentierte Endpunkt `store.steampowered.com/appreviews/<appid>?json=1` ist laut Steamworks-Dokumentation veraltet.
 
-- **Stichprobe (Kapitel 3, 4, 6):** je Spiel die `r fmt_num(as.integer(D$meta[["max_reviews"]]))` neuesten Reviews (`filter = Recent`), alle Sprachen, alle Kaufarten, Steams Standard-Filter für Off-Topic-Phasen aktiv.
-- **Tageswerte (Kapitel 5):** für jeden Tag (UTC) die Zahl aller und der positiven Reviews über `total_matching` mit Zeitraum-Filter, jeweils mit und ohne `filter_offtopic_activity`. Dabei werden keine Review-Texte heruntergeladen.
+- **Stichprobe (Kapitel 3, 4, 6):** je Spiel die `r sample_n` neuesten Reviews (`filter = Recent`), alle Sprachen, alle Kaufarten, Steams Standard-Filter für Off-Topic-Phasen aktiv.
+- **Tageswerte (Kapitel 5):** für jeden Tag (UTC) die Zahl aller Reviews (`total_matching`) und der positiven (`query_summary`) mit Zeitraum-Filter, jeweils mit und ohne `filter_offtopic_activity`. Die Schnittstelle liefert dabei auch eine einzelne Review mit; die verwenden wir nicht.
 - **Gesamtzahlen:** Zusammenfassung `query_summary` desselben Endpunkts, zweimal abgerufen: nur Steam-Käufe (`purchase_type = steam`, Grundlage von Steams angezeigter Wertung, Kapitel 1) und alle Kaufarten (zum Vergleich mit Stichprobe und Tageswerten, die ebenfalls alle Kaufarten enthalten).
 - **Abruf:** 1,5 s Pause zwischen zwei Anfragen, bei Fehlern erneute Versuche mit wachsender Wartezeit, eigener User-Agent; alle Antworten werden lokal zwischengespeichert.
 - **Datenschutz:** Veröffentlicht wird nur ein bereinigter Datensatz ohne Steam-IDs, Review-IDs und Freitext; Zeitstempel sind auf den Tag gerundet.
