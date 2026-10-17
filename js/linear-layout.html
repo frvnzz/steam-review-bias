@@ -1,0 +1,143 @@
+<!-- Layout je nach Fenstergröße.
+
+     Schmal (< 1024 px), niedrig (≤ 500 px, z. B. Handy quer) oder eine Kennzahl passt
+     nicht in die Fensterhöhe (stark vergrößerte Schrift): kein Scrollytelling,
+     linear lesen. Closeread legt alle Grafiken in eine eigene, fest stehende Spalte;
+     auf Tablets bliebe für Text und Grafik dann je nur eine halbe Bildschirmbreite
+     (Achsenbeschriftung ~7 px). Stattdessen wird jede Grafik direkt vor die erste
+     Textkarte gesetzt, die auf sie verweist (data-focus-on), und steht dort in voller
+     Breite. Die Darstellung regelt html.srb-linear in steam.scss. Welche Fassung der
+     Grafik erscheint (Desktop ab 768 px, sonst Handy), regeln die Bootstrap-Klassen
+     .d-md-* in index.qmd.
+
+     Breit: Scrollytelling. Screenreader lesen die Textspalte und die Grafikspalte
+     nacheinander; jede Grafik bekommt deshalb vor ihrer ersten Textkarte eine
+     unsichtbare Beschreibung (Alt-Text bzw. Inhalt), die Grafikspalte selbst wird für
+     Screenreader ausgeblendet.
+
+     Beim Wechsel (Fenster ziehen, Tablet drehen) bleibt die Leseposition erhalten. -->
+<script>
+(function () {
+  var mq = window.matchMedia("(max-width: 1023.98px), (max-height: 500px)");
+  var moved = [];   // { el, parent, next } in der Reihenfolge des Verschiebens
+  var linear = false;
+
+  // Grafik und erste Textkarte, die sie zeigt, je Closeread-Sektion
+  function eachSticky(fn) {
+    document.querySelectorAll(".cr-section").forEach(function (section) {
+      section.querySelectorAll(".sticky-col .sticky").forEach(function (sticky) {
+        var trigger = section.querySelector(
+          '.narrative-col .trigger[data-focus-on="' + sticky.id + '"]');
+        if (trigger) fn(sticky, trigger, section);
+      });
+    });
+  }
+
+  function linearize() {
+    eachSticky(function (sticky, trigger) {
+      moved.push({ el: sticky, parent: sticky.parentNode, next: sticky.nextSibling });
+      trigger.parentNode.insertBefore(sticky, trigger);
+    });
+    document.documentElement.classList.add("srb-linear");
+  }
+
+  function restore() {
+    document.documentElement.classList.remove("srb-linear");
+    // rückwärts: so ist das jeweils nächste Geschwister schon wieder an seinem Platz
+    for (var i = moved.length - 1; i >= 0; i--) {
+      moved[i].parent.insertBefore(moved[i].el, moved[i].next);
+    }
+    moved = [];
+  }
+
+  // Text, den ein Screenreader statt der Grafik hört: Alt-Text (Desktop- und
+  // Handy-Fassung haben denselben), sonst aria-label (Eisberg) oder der Textinhalt
+  // (große Zahlen)
+  function graphicText(sticky) {
+    var img = sticky.querySelector("img");
+    if (img) return img.alt;
+    var labelled = sticky.querySelector("[aria-label]");
+    if (labelled) return labelled.getAttribute("aria-label");
+    // innerText statt textContent: Zahl und Beschriftung stehen in eigenen Zeilen
+    return sticky.innerText.replace(/\s+/g, " ").trim();
+  }
+
+  function describe() {
+    eachSticky(function (sticky, trigger, section) {
+      var p = document.createElement("p");
+      p.className = "visually-hidden srb-sr-graphic";
+      p.textContent = "Grafik: " + graphicText(sticky);
+      trigger.parentNode.insertBefore(p, trigger);
+      section.querySelector(".sticky-col").setAttribute("aria-hidden", "true");
+    });
+  }
+
+  function undescribe() {
+    document.querySelectorAll(".srb-sr-graphic").forEach(function (p) { p.remove(); });
+    document.querySelectorAll(".cr-section .sticky-col").forEach(function (col) {
+      col.removeAttribute("aria-hidden");
+    });
+  }
+
+  // Erstes Textelement, das oben im Fenster (teilweise) zu sehen ist, und sein
+  // Abstand zur Oberkante. Grafiken zählen nicht: Sie wechseln mit dem Layout
+  // ihren Platz (Sticky-Spalte ↔ zwischen den Absätzen).
+  function readingAnchor() {
+    var els = document.querySelectorAll(".narrative, .chapter, .prose > *, .site-footer");
+    for (var i = 0; i < els.length; i++) {
+      var r = els[i].getBoundingClientRect();
+      if (r.bottom > 0 && r.height > 0) return { el: els[i], top: Math.max(r.top, 0) };
+    }
+    return null;
+  }
+
+  function scrollToAnchor(a) {
+    if (!a) return;
+    var y = a.el.getBoundingClientRect().top + window.scrollY - a.top;
+    if (window.lenis) {
+      // Lenis kennt sonst noch die Seitenhöhe des alten Layouts und kappt das Ziel
+      window.lenis.resize();
+      window.lenis.scrollTo(y, { immediate: true, force: true });
+    } else {
+      window.scrollTo(0, y);
+    }
+  }
+
+  // Kennzahlen und Eisberg (Sticky-Elemente ohne Bild) wachsen mit der Schrift. Sind
+  // sie höher als das Fenster, schneidet die Sticky-Spalte sie ab. Bilder dagegen
+  // begrenzt steam.scss auf die Fensterhöhe. Die Höhe ist in beiden Layouts etwa
+  // gleich (gleiche Breite), daher reicht eine Messung im aktuellen.
+  function tooTall() {
+    return Array.prototype.some.call(document.querySelectorAll(".cr-section .sticky"),
+      function (el) { return !el.querySelector("img") && el.offsetHeight > window.innerHeight; });
+  }
+
+  function apply(toLinear) {
+    if (toLinear) { undescribe(); linearize(); } else { restore(); describe(); }
+    linear = toLinear;
+  }
+
+  // Leseposition beim Scrollen merken: Wenn das change-Ereignis kommt, ist die Seite
+  // schon in der neuen Breite umgebrochen, die Position von dort wäre bereits falsch.
+  var anchor = null, pending = false;
+  function remember() { pending = false; anchor = readingAnchor(); }
+  window.addEventListener("scroll", function () {
+    if (!pending) { pending = true; requestAnimationFrame(remember); }
+  }, { passive: true });
+
+  function update() {
+    var want = mq.matches || tooTall();
+    if (want === linear) return;
+    var a = anchor;
+    apply(want);
+    scrollToAnchor(a);
+    remember();
+  }
+
+  apply(mq.matches);
+  if (!linear && tooTall()) apply(true);
+  remember();
+  mq.addEventListener("change", update);
+  window.addEventListener("resize", update);
+})();
+</script>

@@ -21,7 +21,7 @@ Scrollytelling-Webseite über **Selektionsbias in Steam-User-Reviews**: Die Zahl
 | `R/simulation.R` | Rechenbeispiel aus Kapitel 2 |
 | `R/mobile.R` | Handy-Fassungen der Grafiken |
 | `R/theme.R` | ggplot2-Theme + Zahlenformate |
-| `js/` | Lenis-Smooth-Scrolling und lineares Handy-Layout (als HTML-Includes) |
+| `js/` | Lenis-Smooth-Scrolling und lineares Layout für Handy und Tablet (als HTML-Includes) |
 | `includes/head.html` | Beschreibung, Favicon, Link-Vorschau |
 | `images/` | Favicon und Vorschaubild für Link-Vorschauen |
 | `filters/lazy-images.lua` | lädt Grafiken erst beim Hinscrollen |

@@ -161,9 +161,10 @@ main#quarto-document-content { margin-top: 0; }
 // Closeread setzt 45svh Abstand über UND unter jede Karte: fast ein ganzer
 // Bildschirm Leere zwischen zwei Karten und vor/nach jeder Sektion. Weniger
 // reicht – eine Karte wird aktiv, wenn ihr .trigger die Bildschirmmitte erreicht.
-// (.cr-section.sidebar-left, weil closeread.css nach diesem Stylesheet lädt)
+// (.cr-section.sidebar-left, weil closeread.css nach diesem Stylesheet lädt;
+// nicht im linearen Layout, s. u.)
 @media (min-width: 768px) {
-  .cr-section.sidebar-left .narrative-col .trigger {
+  html:not(.srb-linear) .cr-section.sidebar-left .narrative-col .trigger {
     padding-block: 30svh;
     padding-inline: clamp(24px, 4vw, 64px);   // Karte nicht am Fensterrand
     &:first-child { padding-top: 12svh; }
@@ -346,11 +347,13 @@ main#quarto-document-content { margin-bottom: 0; }
 // Fokus für Tastaturnutzer:innen sichtbar
 a:focus-visible { outline: 2px solid $srb-accent; outline-offset: 2px; }
 
-// ---------- Handy & kleine Tablets (< 768 px) ----------
-// Kein Scrollytelling: js/mobile-linear.html setzt jede Grafik vor ihren ersten
-// Absatz und markiert das mit html.srb-linear. Grafik und Text stehen dann
-// untereinander in voller Breite, gelesen wird im eigenen Tempo.
-// Ohne JavaScript bleibt Closereads eigene Handy-Darstellung (Text über der Grafik).
+// ---------- Lineares Layout: Handy, Tablet, niedrige Fenster ----------
+// Kein Scrollytelling unter 1024 px Breite oder bis 500 px Höhe:
+// js/linear-layout.html setzt jede Grafik vor ihren ersten Absatz und markiert das
+// mit html.srb-linear. Grafik und Text stehen dann untereinander in derselben
+// Spalte wie Kapitelüberschriften und Fließtext, gelesen wird im eigenen Tempo.
+// Ab 768 px erscheinen dabei die Desktop-Grafiken (in voller Spaltenbreite lesbar).
+// Ohne JavaScript bleibt Closereads eigene Darstellung.
 $srb-mobile-gutter: 16px;   // ein Seitenrand für Text, Überschriften und Grafiken
 
 html.srb-linear .cr-section {
@@ -358,12 +361,14 @@ html.srb-linear .cr-section {
   .sticky-col { display: none; }    // leer: alle Grafiken sind umgezogen
 
   .narrative-col {
+    width: min(#{$srb-col}, 100%);
     max-width: none;
     min-width: 0;
-    margin: 0;
-    padding: 0 $srb-mobile-gutter;
+    margin: 0 auto;
+    padding: 0 1.25rem;
     background: transparent;
     font-size: 1.0625rem;
+    @media (max-width: 767.98px) { padding-inline: $srb-mobile-gutter; }
   }
   // Closereads Abstände fürs Scrollen (45svh je Karte) und die Karten-Optik entfallen
   .narrative-col .trigger { padding: 0; }
@@ -393,7 +398,16 @@ html.srb-linear .cr-section {
 .fig-head { margin-bottom: .6rem; }
 .fig-title { margin: 0; color: #fff; font-weight: 700; font-size: 1.05rem; line-height: 1.3; }
 .fig-sub { margin: .25rem 0 0; color: $srb-muted; font-size: .875rem; line-height: 1.4; }
-.fig-caption { margin: .35rem 0 0; color: $srb-muted; font-size: .78rem; text-align: right; }
+.fig-caption { margin: .35rem 0 0; color: $srb-muted; font-size: .78rem; }
+
+// Linear stehen Kennzahl und Eisberg direkt untereinander; beide zeigen dieselbe
+// Review-Zahl. Die Kennzahl dazwischen entfällt.
+html.srb-linear #cr-hook-n { display: none; }
+
+// „Bewegung reduzieren“: Grafiken wechseln ohne Überblendung
+@media (prefers-reduced-motion: reduce) {
+  .cr-section .sticky { transition: none !important; }
+}
 
 // Datentabelle als Blöcke (Handy-Fassung in index.qmd)
 .sample-cards {

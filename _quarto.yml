@@ -37,8 +37,10 @@ format:
     include-in-header:
       - includes/head.html
     include-after-body:
+      # zuerst das Layout: Es soll vor dem ersten Zeichnen umschalten, nicht erst
+      # nachdem lenis.min.js geladen ist (sonst springt die Seite am Handy sichtbar)
+      - js/linear-layout.html   # schmal/niedrig: Grafiken zwischen die Absätze statt sticky
       - js/smooth-scroll.html
-      - js/mobile-linear.html   # Handy: Grafiken zwischen die Absätze statt sticky
     fig-dpi: 200
     fig-width: 7
     fig-height: 4.5

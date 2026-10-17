@@ -1,7 +1,7 @@
 # Handy-Fassungen der Grafiken.
 # Gleiche Daten wie am Desktop, aber für ~360 px Breite. Am Handy stehen die
 # Grafiken nicht sticky, sondern in voller Breite zwischen den Absätzen
-# (js/mobile-linear.html). Deshalb:
+# (js/linear-layout.html). Deshalb:
 #   • Titel, Untertitel und Quellenhinweis als echter HTML-Text statt im Bild
 #     (skaliert mit der Schrift, bricht sauber um, spart Bildhöhe)
 #   • größere Grundschrift, Facetten untereinander, weniger Datums-Ticks
