@@ -3,16 +3,16 @@ name: Publish to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:   # nur bauen (prüft _freeze/), nicht veröffentlichen
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
+# Pro Branch eine Warteschlange; laufende Deployments nicht mittendrin abbrechen
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -20,20 +20,43 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Kein R in der CI: alle R-Ergebnisse kommen aus _freeze/ (execute: freeze: auto).
+      # freeze: auto erkennt aber nur Änderungen an index.qmd. Passt _freeze/ nicht mehr
+      # zu index.qmd, R/ oder data/, würde sonst still der alte Stand veröffentlicht.
+      - name: Check that _freeze/ is up to date
+        env:
+          LC_ALL: C   # gleiche Dateireihenfolge wie im R-Chunk freeze-fingerprint
+        run: |
+          freeze=_freeze/index/execute-results/html.json
+          hint="Lokal 'quarto render index.qmd' ausführen und _freeze/ mit committen."
+          if [ "$(md5sum index.qmd | cut -d' ' -f1)" != "$(jq -r .hash "$freeze")" ]; then
+            echo "::error::index.qmd wurde geändert, _freeze/ aber nicht neu erzeugt. $hint"
+            exit 1
+          fi
+          inputs=$(md5sum R/*.R data/*.csv | md5sum | cut -d' ' -f1)
+          if ! grep -q "srb-inputs: $inputs" "$freeze"; then
+            echo "::error::R/ oder data/ wurden geändert, _freeze/ aber nicht neu erzeugt. $hint"
+            exit 1
+          fi
+
       - uses: quarto-dev/quarto-actions/setup@v2
         with:
           version: 1.10.19
 
-      # Kein R nötig: alle R-Ergebnisse liegen in _freeze/ (execute: freeze: auto).
       - uses: quarto-dev/quarto-actions/render@v2
 
-      - uses: actions/upload-pages-artifact@v5
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

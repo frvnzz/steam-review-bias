@@ -46,7 +46,7 @@ Die Daten stammen ausschließlich vom offiziellen Steam-Endpunkt
 Rscript R/fetch_reviews.R --test   # Mini-Abruf zum Ausprobieren
 Rscript R/fetch_reviews.R          # vollständiger Abruf (dauert, siehe unten)
 Rscript R/clean_reviews.R          # data-raw/ → data/
-quarto render                      # Seite neu rendern, aktualisiert _freeze/
+quarto render index.qmd            # R neu ausführen, aktualisiert _freeze/
 ```
 
 - **Stichprobe:** pro Spiel die neuesten `SRB_MAX_REVIEWS` Reviews (Standard 10 000), z. B. `SRB_MAX_REVIEWS=2000 Rscript R/fetch_reviews.R`.
@@ -80,4 +80,8 @@ Passen `_team.yml` und `CITATION.cff` nicht zusammen, bricht `quarto render` mit
 
 Einmalig: im Repo unter **Settings → Pages → Build and deployment → Source** die Option **GitHub Actions** wählen.
 
-Danach baut [`.github/workflows/publish.yml`](.github/workflows/publish.yml) bei jedem Push auf `main` die Seite mit `quarto-dev/quarto-actions` und veröffentlicht sie. Weil `execute: freeze: auto` gesetzt ist, läuft in der CI kein R. **Wichtig:** Vor dem Push lokal `quarto render` ausführen und `_freeze/` mit committen.
+Danach baut [`.github/workflows/publish.yml`](.github/workflows/publish.yml) bei jedem Push auf `main` die Seite mit `quarto-dev/quarto-actions` und veröffentlicht sie. Weil `execute: freeze: auto` gesetzt ist, läuft in der CI kein R: Sie baut die Seite aus `_freeze/`.
+
+**Wichtig:** Nach jeder Änderung an `index.qmd`, `R/` oder `data/` lokal `quarto render index.qmd` ausführen und `_freeze/` mit committen. Ein bloßes `quarto render` reicht dafür nicht: `freeze: auto` erkennt nur Änderungen an `index.qmd` selbst und würde sonst die alten Ergebnisse wiederverwenden. Das gilt auch für Grafik-Optionen in `_quarto.yml` (z. B. `fig-dpi`).
+
+Die Action prüft das vor dem Bauen (auch bei Pull Requests): Passt `_freeze/` nicht zu `index.qmd` oder zum Fingerabdruck von `R/*.R` und `data/*.csv` (Chunk `freeze-fingerprint`), bricht sie mit einem Hinweis ab, statt veraltete Zahlen zu veröffentlichen.

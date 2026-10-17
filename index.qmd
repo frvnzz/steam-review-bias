@@ -136,6 +136,18 @@ alt <- list(
 )
 ```
 
+```{r}
+#| label: freeze-fingerprint
+#| output: asis
+# Fingerabdruck von R/ und data/ (wie `md5sum R/*.R data/*.csv | md5sum`). freeze: auto
+# prüft nur index.qmd selbst; die CI vergleicht diesen Wert mit den aktuellen Dateien
+# und bricht ab, wenn _freeze/ nicht mehr dazu passt.
+inputs <- sort(c(Sys.glob("R/*.R"), Sys.glob("data/*.csv")), method = "radix")
+cat("<!-- srb-inputs:",
+    as.character(openssl::md5(paste0(tools::md5sum(inputs), "  ", inputs, "\n", collapse = ""))),
+    "-->\n")
+```
+
 <!-- ===================================================================== -->
 ::: {.chapter}
 [Kapitel 1]{.chapter-kicker}
