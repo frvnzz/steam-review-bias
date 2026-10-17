@@ -30,6 +30,9 @@ format:
     # sie kosten zehn leere Tab-Stopps und verbreitern die Seite bei 320 px
     anchor-sections: false
     smooth-scroll: false   # Lenis übernimmt (js/smooth-scroll.html)
+    code-copy: false       # kein Code auf der Seite: clipboard.js wird nicht gebraucht
+    filters:
+      - filters/lazy-images.lua
     include-after-body:
       - js/smooth-scroll.html
       - js/mobile-linear.html   # Handy: Grafiken zwischen die Absätze statt sticky
