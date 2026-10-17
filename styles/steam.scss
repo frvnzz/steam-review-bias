@@ -53,6 +53,7 @@ $srb-radius: 2px;  // kaum sichtbar: Flächen sollen nicht wie App-Kacheln wirke
 }
 
 :root {
+  color-scheme: dark;   // dunkle Bildlaufleisten (Darkly setzt das nur mit data-bs-theme)
   --srb-accent: #{$srb-accent};
   --srb-pos: #{$srb-pos};
   --srb-neg: #{$srb-neg};

@@ -5,6 +5,7 @@ project:
     - index.qmd
   resources:
     - js/vendor/lenis/
+    - images/
     - fonts/OFL.txt   # Lizenz; die Schriften selbst kopiert Quarto mit dem Theme
 
 execute:
@@ -33,6 +34,8 @@ format:
     code-copy: false       # kein Code auf der Seite: clipboard.js wird nicht gebraucht
     filters:
       - filters/lazy-images.lua
+    include-in-header:
+      - includes/head.html
     include-after-body:
       - js/smooth-scroll.html
       - js/mobile-linear.html   # Handy: Grafiken zwischen die Absätze statt sticky

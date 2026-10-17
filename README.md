@@ -1,4 +1,4 @@
-# Wer schreibt Reviews – und warum verzerrt das?
+# Fast alle positiv: aber von wem?
 
 Scrollytelling-Webseite über **Selektionsbias in Steam-User-Reviews**: Die Zahl „X % positiv“ beschreibt nicht alle Spieler:innen, sondern nur die, die sich entschieden haben, eine Review zu schreiben.
 
@@ -13,20 +13,29 @@ Scrollytelling-Webseite über **Selektionsbias in Steam-User-Reviews**: Die Zahl
 | `index.qmd` | die Scrollytelling-Seite (Quarto + [Closeread](https://closeread.dev)) |
 | `_quarto.yml` | Projekt- und Format-Konfiguration |
 | `_team.yml` | Gruppenmitglieder (einzige Quelle für alle Namen) |
-| `styles/steam.scss` | eigenes Theme (dunkles Blau, Akzentblau; System-Schriften) |
+| `styles/steam.scss` | eigenes Theme (dunkles Blau, Akzentblau; Lesetext in Source Serif 4, Beschriftungen in Helvetica/Arial) |
+| `fonts/` | Source Serif 4, selbst gehostet (SIL OFL, `fonts/OFL.txt`) |
 | `R/fetch_reviews.R` | Abruf über die Steam-API → `data-raw/` (Cache, gitignored) |
 | `R/clean_reviews.R` | Bereinigung → `data/` (ohne IDs, ohne Freitext) |
+| `R/analysis.R` | Kennzahlen und Grafiken der Kapitel 1 und 3–6 |
+| `R/simulation.R` | Rechenbeispiel aus Kapitel 2 |
+| `R/mobile.R` | Handy-Fassungen der Grafiken |
 | `R/theme.R` | ggplot2-Theme + Zahlenformate |
+| `js/` | Lenis-Smooth-Scrolling und lineares Handy-Layout (als HTML-Includes) |
+| `includes/head.html` | Beschreibung, Favicon, Link-Vorschau |
+| `images/` | Favicon und Vorschaubild für Link-Vorschauen |
+| `filters/lazy-images.lua` | lädt Grafiken erst beim Hinscrollen |
 | `scripts/sync_team.R` | überträgt die Namen aus `_team.yml` nach `CITATION.cff` |
 | `shortcodes/team.lua` | Namen im Footer + Konsistenz-Check gegen `CITATION.cff` |
 | `data/` | bereinigte, committbare Daten |
 | `_freeze/` | eingefrorene R-Ergebnisse – CI braucht dadurch kein R |
 | `_extensions/` | Closeread-Extension |
 | `renv.lock` | exakte R-Paketversionen |
+| `.github/workflows/publish.yml` | prüft `_freeze/`, baut die Seite und veröffentlicht sie auf GitHub Pages |
 
 ## Setup (lokal)
 
-Voraussetzungen: **R ≥ 4.4** und **Quarto ≥ 1.5**. Wir arbeiten in VS Code mit der R- und der Quarto-Extension; RStudio ist nicht nötig.
+Voraussetzungen: **R 4.6** (Version laut `renv.lock`) und **Quarto 1.10** (die CI nutzt 1.10.19, damit ist auch `_freeze/` erzeugt). Wir arbeiten in VS Code mit der R- und der Quarto-Extension; RStudio ist nicht nötig.
 
 ```sh
 git clone https://github.com/frvnzz/steam-review-bias.git

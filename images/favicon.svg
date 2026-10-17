@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Eisberg wie in Kapitel 1: kleine Spitze, Wasserlinie, großer Teil darunter -->
+  <rect width="32" height="32" rx="6" fill="#131a24"/>
+  <path d="M14 6.5 17 5l5 8.5H10.5z" fill="#dce6ef"/>
+  <path d="M8.5 16.5h15.5l3 4.5-4.5 6-10 .5-6.5-5z" fill="#93a7bb" fill-opacity=".38"/>
+  <path d="M4 14.5h24" stroke="#2f8fcc" stroke-width="2.5"/>
+</svg>
