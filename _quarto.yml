@@ -56,7 +56,7 @@ format:
       narrative-background-color-overlay: "rgba(27, 40, 56, 0.97)"
       narrative-text-color-sidebar: "#dce6ef"
       narrative-text-color-overlay: "#dce6ef"
-      narrative-font-size: "1.125rem"
+      narrative-font-size: "1.0625rem"   # = $srb-reading-size in steam.scss
       narrative-border-radius: "2px"
-      narrative-sidebar-width: "minmax(360px, 1.2fr)"
+      narrative-sidebar-width: "minmax(20rem, 1fr)"   # Grafikspalte: 2fr
       narrative-overlay-max-width: "520px"

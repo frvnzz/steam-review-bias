@@ -31,6 +31,9 @@ $headings-font-family: $srb-serif;
 $headings-font-weight: 600;
 $line-height-base: 1.6;
 $srb-col: 42rem;   // eine Textspalte für Titel, Kapitel, Prosa, Footer
+// eine Lesegröße für Karten, lineares Layout und Fließtext (≈ 18 px);
+// die Karten setzt _quarto.yml (narrative-font-size) auf denselben Wert
+$srb-reading-size: 1.0625rem;
 $srb-radius: 2px;  // kaum sichtbar: Flächen sollen nicht wie App-Kacheln wirken
 
 /*-- scss:rules --*/
@@ -38,10 +41,10 @@ $srb-radius: 2px;  // kaum sichtbar: Flächen sollen nicht wie App-Kacheln wirke
 // Source Serif 4 (Adobe, SIL OFL 1.1, fonts/OFL.txt). Pfad relativ zum Projektordner:
 // Quarto kopiert die Dateien beim Rendern neben die kompilierte CSS
 // (index_files/libs/bootstrap/fonts/). swap: Text erscheint sofort in der Ersatzschrift.
+// Nur die Schnitte, die die Seite nutzt (Halbfett/Fett kursiv kommt nicht vor).
 @each $file, $weight, $style in (
   "Regular" 400 normal, "It" 400 italic,
-  "Semibold" 600 normal, "SemiboldIt" 600 italic,
-  "Bold" 700 normal, "BoldIt" 700 italic
+  "Semibold" 600 normal, "Bold" 700 normal
 ) {
   @font-face {
     font-family: "Source Serif 4";
@@ -59,8 +62,6 @@ $srb-radius: 2px;  // kaum sichtbar: Flächen sollen nicht wie App-Kacheln wirke
   --srb-neg: #{$srb-neg};
   --srb-muted: #{$srb-muted};
 }
-
-body { background: $srb-bg; }
 
 // Beschriftungen in Grotesk, damit sie sich vom Lesetext abheben
 .chapter-kicker,
@@ -103,8 +104,10 @@ main#quarto-document-content { margin-top: 0; }
     margin-top: .9rem;
     max-width: 36em;
   }
-  .quarto-title-meta {
-    display: block !important;   // Quarto setzt hier ein 2-spaltiges Grid
+  // .quarto-title-block.default: so spezifisch wie Quartos Regel (2-spaltiges Grid),
+  // steht aber später und gewinnt damit
+  &.quarto-title-block.default .quarto-title-meta {
+    display: block;
     text-align: left;
     margin-top: 1.75rem;
     color: $srb-text;
@@ -154,20 +157,32 @@ main#quarto-document-content { margin-top: 0; }
     border: none;
     margin-top: 0;
   }
-  p { color: $srb-text; font-size: 1.1rem; }
 }
 
 // ---------- Erzähltext (Closeread) ----------
+// Die Sektion ist höchstens 88rem breit und hat links und rechts denselben Rand;
+// die Textspalte bekommt ein Drittel (_quarto.yml: narrative-sidebar-width). So
+// bleiben Karten bei 45–60 Zeichen pro Zeile und Grafiken wachsen auf großen
+// Bildschirmen nicht über ~900 px. (.cr-section.sidebar-left, weil closeread.css
+// nach diesem Stylesheet lädt; nicht im linearen Layout, s. u.)
+html:not(.srb-linear) .cr-section.sidebar-left {
+  width: min(100%, 88rem);
+  justify-self: center;
+  padding-inline: clamp(1.25rem, 3vw, 3.5rem);
+  column-gap: clamp(1.5rem, 3vw, 3.5rem);
+}
+
 // Closeread setzt 45svh Abstand über UND unter jede Karte: fast ein ganzer
-// Bildschirm Leere zwischen zwei Karten und vor/nach jeder Sektion. Weniger
-// reicht – eine Karte wird aktiv, wenn ihr .trigger die Bildschirmmitte erreicht.
-// (.cr-section.sidebar-left, weil closeread.css nach diesem Stylesheet lädt;
-// nicht im linearen Layout, s. u.)
+// Bildschirm Leere zwischen zwei Karten. Weniger reicht – eine Karte wird aktiv,
+// wenn ihr .trigger die Bildschirmmitte erreicht. Vor der ersten Karte bleibt es
+// bei 45svh: Die Grafik rastet erst ein, wenn die Sektion oben am Fenster ankommt;
+// mit weniger Abstand stünde die erste Karte schon in der Mitte, während ihre
+// Grafik noch halb unter dem Fensterrand hängt.
 @media (min-width: 768px) {
   html:not(.srb-linear) .cr-section.sidebar-left .narrative-col .trigger {
     padding-block: 30svh;
-    padding-inline: clamp(24px, 4vw, 64px);   // Karte nicht am Fensterrand
-    &:first-child { padding-top: 12svh; }
+    padding-inline: 0;   // Rand kommt von der Sektion
+    &:first-child { padding-top: 45svh; }
     &:last-child  { padding-bottom: 25svh; }
   }
 }
@@ -286,6 +301,21 @@ main#quarto-document-content { margin-top: 0; }
   width: min(#{$srb-col}, 100%);
   margin: 1.5rem 0 0;
   padding: 0 1.25rem 2rem;
+  font-size: $srb-reading-size;
+}
+
+// Kapitel 7: die Merksätze als nummerierte Liste mit Luft und großen Ziffern
+.takeaways ol {
+  padding-left: 2.2rem;
+  li { padding-left: .4rem; }
+  li + li { margin-top: 1rem; }
+  li::marker {
+    color: $srb-accent;
+    font-family: $srb-serif;
+    font-size: 1.35em;
+    font-weight: 600;
+    font-variant-numeric: lining-nums;
+  }
 }
 
 // „Unsere Daten“: Kasten nur mit einer Linie oben und unten, Titel als echte h3
@@ -295,7 +325,15 @@ main#quarto-document-content { margin-top: 0; }
   border-block: 1px solid $srb-line;
 
   h3 { margin: 0 0 .5rem; font-size: 1rem; font-weight: 700; line-height: 1.5; }
+  // Die Linie des Kastens schließt auch die Tabelle ab: nicht zwei Linien untereinander
+  // (nur die Breite: border-bottom: 0 setzt auch die Farbe zurück, und die Zellen
+  // erben ihre Linienfarbe von der Tabelle)
+  table { margin-bottom: 0; border-bottom-width: 0; }
+  tbody tr:last-child > * { border-bottom-width: 0; }
 }
+
+// Zweite Zeile in Tabellenzellen (Anteil positiv, Zeitraum) als Nebeninformation
+.prose table small { color: $srb-muted; }
 
 // Ziffern gleich breit, damit Zahlen in Spalten untereinanderstehen
 .prose table, .sample-cards { font-variant-numeric: tabular-nums; }
@@ -367,7 +405,7 @@ html.srb-linear .cr-section {
     margin: 0 auto;
     padding: 0 1.25rem;
     background: transparent;
-    font-size: 1.0625rem;
+    font-size: $srb-reading-size;
     @media (max-width: 767.98px) { padding-inline: $srb-mobile-gutter; }
   }
   // Closereads Abstände fürs Scrollen (45svh je Karte) und die Karten-Optik entfallen
@@ -383,10 +421,9 @@ html.srb-linear .cr-section {
     color: $srb-text;
     line-height: 1.65;
   }
-  // Grafiken immer sichtbar (Closeread blendet inaktive aus) und in voller Breite
+  // Grafiken in voller Breite (Closereads Ausblenden inaktiver Grafiken greift nur
+  // innerhalb der Sticky-Spalte, von dort sind sie umgezogen)
   .narrative-col .sticky {
-    opacity: 1 !important;
-    transform: none !important;
     transition: none;
     margin: 2rem 0 1.5rem;
     figure, .quarto-figure { margin: 0; }

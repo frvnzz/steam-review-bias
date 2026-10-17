@@ -605,13 +605,13 @@ print_mobile(plot_languages_mobile(r))
 ## [Kapitel 7]{.chapter-kicker} Worauf du bei Steam-Wertungen achten kannst
 :::
 
-::: {.prose}
-1. „X % positiv“ gilt nur für die Leute, die eine Review geschrieben haben. Die stille Mehrheit fehlt immer, und ob sie zufriedener oder unzufriedener ist, weiß niemand.
-2. Schau auch auf den Zeitpunkt. Steam zeigt neben der Gesamtwertung die Wertung der letzten 30 Tage, und beide können weit auseinanderliegen: Bei *Helldivers 2* sind insgesamt `r fmt_pct(hd$share_pos_all)` der Reviews positiv, in unserer Stichprobe der neuesten Reviews `r fmt_pct(pick(sample_info, HD2, "share"))`. Plötzliche Ausschläge im Review-Verlauf können auf Review-Bombing hinweisen.
-3. Achte darauf, nach wie vielen Stunden jemand bewertet hat. Ein Urteil nach 30 Minuten und eines nach 300 Stunden messen Verschiedenes.
-4. Einmal-Reviewer, Viel-Reviewer und verschiedene Sprachgruppen urteilen unterschiedlich, und die Gesamtwertung mischt sie alle.
-5. Ein auffälliger Prozentwert aus 30 Reviews ist viel weniger belastbar als einer aus 3.000.
-6. Steam filtert mit. Als „off-topic“ eingestufte Phasen fehlen in der Gesamtwertung, andere Review-Wellen zählen voll, und Reviews zu Keys, die nicht über Steam gekauft wurden, zählen gar nicht.
+::: {.prose .takeaways}
+1. **„X % positiv“ gilt nur für die Leute, die eine Review geschrieben haben.** Die stille Mehrheit fehlt immer, und ob sie zufriedener oder unzufriedener ist, weiß niemand.
+2. **Schau auch auf den Zeitpunkt.** Steam zeigt neben der Gesamtwertung die Wertung der letzten 30 Tage, und beide können weit auseinanderliegen: Bei *Helldivers 2* sind insgesamt `r fmt_pct(hd$share_pos_all)` der Reviews positiv, in unserer Stichprobe der neuesten Reviews `r fmt_pct(pick(sample_info, HD2, "share"))`. Plötzliche Ausschläge im Review-Verlauf können auf Review-Bombing hinweisen.
+3. **Achte darauf, nach wie vielen Stunden jemand bewertet hat.** Ein Urteil nach 30 Minuten und eines nach 300 Stunden messen Verschiedenes.
+4. **Wer schreibt, verschiebt die Zahl.** Einmal-Reviewer, Viel-Reviewer und verschiedene Sprachgruppen urteilen unterschiedlich, und die Gesamtwertung mischt sie alle.
+5. **Wenige Reviews, wenig Gewissheit.** Ein auffälliger Prozentwert aus 30 Reviews ist viel weniger belastbar als einer aus 3.000.
+6. **Steam filtert mit.** Als „off-topic“ eingestufte Phasen fehlen in der Gesamtwertung, andere Review-Wellen zählen voll, und Reviews zu Keys, die nicht über Steam gekauft wurden, zählen gar nicht.
 :::
 
 <!-- ===================================================================== -->
