@@ -144,7 +144,7 @@ plot_share_by_playtime <- function(reviews) {
     theme(panel.grid.major.x = element_blank(), panel.spacing.y = unit(1.2, "lines"))
 }
 
-# ---- Kapitel 4: Wer sind die Reviewer? -------------------------------------
+# ---- Kapitel 4: Wer sind die Reviewer:innen? -------------------------------
 
 reviewer_table <- function(reviews) {
   reviews |>
@@ -165,7 +165,7 @@ plot_reviewer_mix <- function(reviews) {
     facet_wrap(~game, nrow = 1) +
     scale_x_continuous(labels = \(x) fmt_pct(x), expand = expansion(c(0, 0.25))) +
     labs(x = "Anteil der Reviews", y = "Reviews, die die Person\ninsgesamt geschrieben hat",
-         title = "Nur wenige Reviews stammen von Viel-Reviewern",
+         title = "Nur wenige Reviews stammen von Viel-Reviewer:innen",
          subtitle = "Verteilung nach Anzahl aller Reviews der Autor:innen (heutiger Stand)",
          caption = with_source()) +
     theme(panel.grid.major.y = element_blank(), panel.spacing = unit(1.5, "lines"))
@@ -180,7 +180,7 @@ plot_reviewer_share <- function(reviews) {
     facet_wrap(~game, ncol = 1) +   # gemeinsame y-Achse: Unterschiede nicht optisch aufblähen
     scale_y_continuous(labels = \(x) fmt_pct(x), limits = c(NA, 1)) +
     labs(x = "Reviews, die die Person insgesamt geschrieben hat", y = "Anteil positiv",
-         title = "Viel-Reviewer bewerten seltener positiv",
+         title = "Viel-Reviewer:innen bewerten seltener positiv",
          subtitle = "Anteil positiver Reviews mit 95-%-Unsicherheitsintervall (Striche)",
          caption = with_source(paste0("y-Achse beginnt nicht bei 0 %. Gruppen mit weniger als ",
                                       min_group_n, " Reviews ausgeblendet."))) +
