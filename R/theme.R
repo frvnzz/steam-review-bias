@@ -17,17 +17,17 @@ srb_col <- c(
   grey   = "#5b6f86"
 )
 
-theme_srb <- function(base_size = 13) {
+# base_size steuert Abstände und Ränder (wie bei theme_minimal), text_size die
+# Schriftgröße. Desktop: Abstände für 13 pt, Schrift 11 pt; die Handy-Fassung
+# setzt beides auf 14 (R/mobile.R).
+theme_srb <- function(base_size = 13, text_size = 11) {
   theme_minimal(base_size = base_size) %+replace%
     theme(
       plot.background   = element_rect(fill = "transparent", colour = NA),
       panel.background  = element_rect(fill = "transparent", colour = NA),
       panel.grid.major  = element_line(colour = srb_col[["grid"]], linewidth = 0.35),
       panel.grid.minor  = element_blank(),
-      # ohne `size`: %+replace% ersetzt das ganze Element, die Schrift fällt dadurch auf
-      # ggplots 11 pt zurück (base_size steuert nur die Abstände). Die Desktop-Grafiken
-      # sind so abgestimmt; die Handy-Fassung setzt die Größe ausdrücklich (R/mobile.R).
-      text              = element_text(colour = srb_col[["text"]]),
+      text              = element_text(colour = srb_col[["text"]], size = text_size),
       axis.text         = element_text(colour = srb_col[["muted"]], size = rel(0.85)),
       axis.title        = element_text(colour = srb_col[["muted"]], size = rel(0.9)),
       plot.title        = element_text(face = "bold", size = rel(1.2), hjust = 0,
@@ -51,9 +51,6 @@ theme_srb <- function(base_size = 13) {
 
 scale_fill_vote <- function(...) {
   scale_fill_manual(values = c(positiv = srb_col[["pos"]], negativ = srb_col[["neg"]]), ...)
-}
-scale_colour_vote <- function(...) {
-  scale_colour_manual(values = c(positiv = srb_col[["pos"]], negativ = srb_col[["neg"]]), ...)
 }
 
 # Deutsche Zahlenformate

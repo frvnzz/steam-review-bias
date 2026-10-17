@@ -4,6 +4,8 @@
 #
 # Statt zufälliger Ziehungen verwenden wir Erwartungswerte (exakte Anteile),
 # damit Grafik und Formel genau übereinstimmen.
+#
+# Braucht vorher: R/theme.R (srb_col, fmt_*, scale_fill_vote).
 
 library(dplyr)
 library(ggplot2)
@@ -24,21 +26,24 @@ observed_share <- function(p, r_happy, r_unhappy) {
 
 make_population <- function(prm = sim_params, seed = 42) {
   side <- sqrt(prm$n)
+  if (side != round(side)) stop("sim_params$n muss eine Quadratzahl sein (Raster).", call. = FALSE)
   n_happy <- round(prm$n * prm$p_happy)
-  set.seed(seed)
-  pop <- tibble(
-    x = rep(seq_len(side), times = side),
-    y = rep(seq_len(side), each = side),
-    happy = sample(rep(c(TRUE, FALSE), c(n_happy, prm$n - n_happy)))
-  )
   # Szenario A: Unzufriedene schreiben 3× so oft → genau die erwartete Anzahl markieren
   n_rev_happy   <- round(n_happy * prm$rate_low)
   n_rev_unhappy <- round((prm$n - n_happy) * prm$rate_high)
-  pop |>
-    group_by(happy) |>
-    mutate(reviews = row_number(runif(n())) <= if_else(happy, n_rev_happy, n_rev_unhappy)) |>
-    ungroup() |>
-    mutate(vote = factor(if_else(happy, "positiv", "negativ"), levels = c("positiv", "negativ")))
+  # Zufall nur für die Anordnung im Raster; eigener Seed, ohne den globalen zu verändern
+  withr::with_seed(seed, {
+    pop <- tibble(
+      x = rep(seq_len(side), times = side),
+      y = rep(seq_len(side), each = side),
+      happy = sample(rep(c(TRUE, FALSE), c(n_happy, prm$n - n_happy)))
+    )
+    pop |>
+      group_by(happy) |>
+      mutate(reviews = row_number(runif(n())) <= if_else(happy, n_rev_happy, n_rev_unhappy)) |>
+      ungroup() |>
+      mutate(vote = factor(if_else(happy, "positiv", "negativ"), levels = c("positiv", "negativ")))
+  })
 }
 
 sim_summary <- function(prm = sim_params) {
@@ -54,21 +59,23 @@ sim_summary <- function(prm = sim_params) {
     share_A      = mean(rev$happy),   # Unzufriedene schreiben 3× so oft
     share_B      = observed_share(prm$p_happy, prm$rate_high, prm$rate_low),  # umgekehrt
     ratio        = prm$rate_high / prm$rate_low,
+    side         = sqrt(prm$n),
     prm          = prm
   )
 }
 
-plot_population <- function(s, highlight_reviewers = FALSE) {
+# point_scale: Punktgröße relativ zur Desktop-Fassung (Handy: kleiner)
+plot_population <- function(s, highlight_reviewers = FALSE, point_scale = 1) {
   pop <- s$pop
   p <- ggplot(pop, aes(x, y, fill = vote))
   if (highlight_reviewers) {
     p <- p +
-      geom_point(data = filter(pop, !reviews), shape = 21, size = 3.2, stroke = 0,
+      geom_point(data = filter(pop, !reviews), shape = 21, size = 3.2 * point_scale, stroke = 0,
                  alpha = 0.18) +
-      geom_point(data = filter(pop, reviews), shape = 21, size = 4.6, stroke = 1.1,
+      geom_point(data = filter(pop, reviews), shape = 21, size = 4.6 * point_scale, stroke = 1.1,
                  colour = srb_col[["bg"]])
   } else {
-    p <- p + geom_point(shape = 21, size = 4.2, stroke = 0.6, colour = srb_col[["bg"]])
+    p <- p + geom_point(shape = 21, size = 4.2 * point_scale, stroke = 0.6, colour = srb_col[["bg"]])
   }
   p +
     scale_fill_vote(labels = c(positiv = "zufrieden", negativ = "unzufrieden")) +

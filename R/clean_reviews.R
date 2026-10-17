@@ -11,7 +11,7 @@ library(dplyr)
 library(purrr)
 library(readr)
 
-source("R/fetch_reviews.R")   # für `games` und `bombing_windows`
+source("R/config.R")   # games, bombing_windows
 
 as_date_utc <- function(ts) as.Date(as.POSIXct(ts, origin = "1970-01-01", tz = "UTC"))
 
@@ -75,7 +75,7 @@ main <- function() {
 
   summaries <- readRDS(file.path("data-raw", "summaries.rds")) |>
     select(-any_of("fetched_at")) |>   # ältere Abrufe: Zeitstempel mit lokaler Zeitzone
-    left_join(select(games, appid, game = name, role), by = "appid")
+    left_join(select(games, appid, game = name), by = "appid")
   write_csv(summaries, "data/summaries.csv")
 
   daily <- readRDS(file.path("data-raw", "daily_counts.rds")) |>

@@ -15,6 +15,7 @@ Scrollytelling-Webseite über **Selektionsbias in Steam-User-Reviews**: Die Zahl
 | `_team.yml` | Gruppenmitglieder (einzige Quelle für alle Namen) |
 | `styles/steam.scss` | eigenes Theme (dunkles Blau, Akzentblau; Lesetext in Source Serif 4, Beschriftungen in Helvetica/Arial) |
 | `fonts/` | Source Serif 4, selbst gehostet (SIL OFL, `fonts/OFL.txt`) |
+| `R/config.R` | Spiele, Zeitfenster und Schwellenwerte (einzige Stelle dafür) |
 | `R/fetch_reviews.R` | Abruf über die Steam-API → `data-raw/` (Cache, gitignored) |
 | `R/clean_reviews.R` | Bereinigung → `data/` (ohne IDs, ohne Freitext) |
 | `R/analysis.R` | Kennzahlen und Grafiken der Kapitel 1 und 3–6 |

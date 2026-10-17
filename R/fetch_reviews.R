@@ -8,20 +8,15 @@
 # Requests – zum Aktualisieren den Cache-Ordner löschen.
 #
 # Aufruf:
-#   Rscript R/fetch_reviews.R            # alles laut Konfiguration unten
+#   Rscript R/fetch_reviews.R            # alles laut R/config.R und Konfiguration unten
 #   Rscript R/fetch_reviews.R --test     # Mini-Abruf (2 Seiten à 20 Reviews, 3 Tage)
 
 library(httr2)
 library(jsonlite)
 
-# ---- Konfiguration ----------------------------------------------------------
+source("R/config.R")   # games, bombing_windows
 
-games <- data.frame(
-  appid = c(1086940L, 1145360L, 553850L),
-  slug  = c("bg3", "hades", "helldivers2"),
-  name  = c("Baldur's Gate 3", "Hades", "Helldivers 2"),
-  role  = c("Blockbuster", "Indie", "Review-Bombing")
-)
+# ---- Konfiguration ----------------------------------------------------------
 
 # Obergrenze pro Spiel: die neuesten N Reviews (filter = Recent).
 # Überschreibbar per Umgebungsvariable, z. B. SRB_MAX_REVIEWS=2000.
@@ -29,17 +24,6 @@ max_reviews <- suppressWarnings(as.integer(Sys.getenv("SRB_MAX_REVIEWS", "10000"
 if (is.na(max_reviews) || max_reviews < 1) {
   stop("SRB_MAX_REVIEWS muss eine positive ganze Zahl sein.", call. = FALSE)
 }
-
-# Zeitfenster für die täglichen Zählungen (Kapitel 5), jeweils mit und ohne
-# Off-Topic-Filter. Borderlands 2 dient nur als Beispiel für ein von Valve
-# als „off-topic“ markiertes Review-Bombing.
-bombing_windows <- data.frame(
-  appid = c(553850L, 49520L),
-  slug  = c("helldivers2", "borderlands2"),
-  name  = c("Helldivers 2", "Borderlands 2"),
-  start = as.Date(c("2024-04-01", "2019-03-01")),
-  end   = as.Date(c("2024-06-30", "2019-05-31"))
-)
 
 endpoint   <- "https://api.steampowered.com/IUserReviewsService/GetAppReviews/v1/"
 user_agent <- "steam-review-bias/0.1 (Statistik-Gruppenprojekt; https://github.com/frvnzz/steam-review-bias)"

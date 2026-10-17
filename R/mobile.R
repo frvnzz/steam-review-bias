@@ -10,13 +10,14 @@
 # In index.qmd steht jede Grafik zweimal: in einem Block .d-none.d-md-block
 # (ab 768 px sichtbar) und in einem Block .d-md-none (darunter sichtbar).
 # Die Handy-Chunks brauchen `output: asis`, damit der HTML-Text durchkommt.
+#
+# Braucht vorher: R/config.R, R/theme.R, R/analysis.R.
 
 library(ggplot2)
 
 theme_srb_mobile <- function() {
-  theme_srb(base_size = 14) +
+  theme_srb(base_size = 14, text_size = 14) +
     theme(
-      text        = element_text(size = 14),   # per `+` ergänzt, s. Kommentar in theme_srb()
       axis.title  = element_text(colour = srb_col[["muted"]], size = rel(0.85), lineheight = 1.05),
       axis.text   = element_text(colour = srb_col[["muted"]], size = rel(0.8)),
       legend.text = element_text(colour = srb_col[["text"]], size = rel(0.85)),
@@ -54,17 +55,8 @@ html_escape <- function(x) {
 
 #' @param p           fertige ggplot-Grafik (Desktop-Fassung oder eigene Handy-Fassung)
 #' @param facet       optional neue Facettierung, z. B. facet_wrap(~game, ncol = 1)
-#' @param size_scale  Faktor für fest eingestellte Punkt-/Textgrößen der Layer
 #' @param date_breaks optional gröbere Datums-Ticks für Zeitreihen
-#' @param drop        Geom-Klassen, die auf dem Handy wegfallen (z. B. "GeomText")
-print_mobile <- function(p, facet = NULL, size_scale = 1, date_breaks = NULL, drop = NULL) {
-  if (length(drop)) {
-    p$layers <- Filter(\(l) !inherits(l$geom, drop), p$layers)
-  }
-  for (i in seq_along(p$layers)) {
-    size <- p$layers[[i]]$aes_params$size
-    if (!is.null(size)) p$layers[[i]]$aes_params$size <- size * size_scale
-  }
+print_mobile <- function(p, facet = NULL, date_breaks = NULL) {
   if (!is.null(facet)) p <- p + facet
   if (!is.null(date_breaks)) {
     p <- p + scale_x_date(date_labels = "%d.%m.%y", date_breaks = date_breaks)
@@ -85,8 +77,8 @@ print_mobile <- function(p, facet = NULL, size_scale = 1, date_breaks = NULL, dr
   )
   # Viele Gruppen auf einer diskreten x-Achse (z. B. neun Spielzeit-Gruppen) passen
   # am Handy nicht nebeneinander: Beschriftung auf zwei Zeilen versetzen statt drehen
-  x_par <- ggplot_build(p)$layout$panel_params[[1]]$x
-  if (inherits(x_par, "ViewScale") && x_par$is_discrete() && length(x_par$get_breaks()) > 6) {
+  sx <- layer_scales(p)$x
+  if (!is.null(sx) && sx$is_discrete() && length(sx$get_limits()) > 6) {
     p <- p + guides(x = guide_axis(n.dodge = 2))
   }
   # Grafiken mit vollständigem eigenem Theme (z. B. theme_void) behalten es
@@ -106,9 +98,9 @@ print_mobile <- function(p, facet = NULL, size_scale = 1, date_breaks = NULL, dr
 # drängen. Stattdessen: ein Feld pro Gruppe (Überschrift über voller Breite),
 # darin die drei Spiele als Zeilen.
 
-dot_rows_mobile <- function(d, facet_var, labels_from, x_breaks = waiver()) {
+# lab: Beschriftung der Desktop-Fassung (factors_labs() bzw. languages_labs())
+dot_rows_mobile <- function(d, facet_var, lab, x_breaks = waiver()) {
   d$game <- factor(d$game, levels = rev(levels(d$game)))   # Baldur's Gate 3 oben
-  lab <- get_labs(labels_from)
   ggplot(d, aes(share, game)) +
     geom_linerange(aes(xmin = lo, xmax = hi), colour = srb_col[["muted"]], linewidth = 0.8) +
     geom_point(colour = srb_col[["pos"]], size = 2.6) +
@@ -119,10 +111,10 @@ dot_rows_mobile <- function(d, facet_var, labels_from, x_breaks = waiver()) {
     theme(panel.grid.major.y = element_blank(), panel.spacing.y = unit(0.6, "lines"))
 }
 
-plot_factors_mobile <- function(reviews, min_n = 20) {
+plot_factors_mobile <- function(reviews, min_n = min_group_n) {
   d <- factor_table(reviews) |> filter(n >= min_n)
   d$group <- factor(d$group, levels = rev(levels(d$group)))   # Reihenfolge wie im Text
-  dot_rows_mobile(d, group, plot_factors(reviews, min_n), x_breaks = seq(0, 1, 0.2))
+  dot_rows_mobile(d, group, factors_labs(min_n), x_breaks = seq(0, 1, 0.2))
 }
 
 plot_languages_mobile <- function(reviews, top = 6) {
@@ -130,5 +122,5 @@ plot_languages_mobile <- function(reviews, top = 6) {
     mutate(lang = coalesce(language_names[language], language))
   order <- d |> group_by(lang) |> summarise(m = mean(share)) |> arrange(desc(m)) |> pull(lang)
   d$lang <- factor(d$lang, levels = order)
-  dot_rows_mobile(d, lang, plot_languages(reviews, top))
+  dot_rows_mobile(d, lang, languages_labs(top))
 }
